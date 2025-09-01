@@ -5,15 +5,18 @@ import { parseISO8601Duration } from '../utils/duration.js';
 const cache = new NodeCache({ stdTTL: 3600 });
 
 export async function getTrendingVideos(req, res) {
-  const { regions, categoryId, maxResults = 10, shortsOnly = 'false', maxShorts = 5 } = req.query;
+  const { regions, categoryId, maxResults = 10, videoType = 'all', maxVideos = 5 } = req.query;
   if (!regions) return res.status(400).json({ error: 'Regions required' });
+  if (!['all', 'short', 'long'].includes(videoType)) {
+    return res.status(400).json({ error: 'Invalid videoType. Use all, short, or long.' });
+  }
 
   const regionCodes = regions.split(',');
   const results = {};
 
   try {
     for (const region of regionCodes) {
-      const cacheKey = `trending_${region}_${categoryId || 'all'}_${maxResults}_${shortsOnly}_${maxShorts}`;
+      const cacheKey = `trending_${region}_${categoryId || 'all'}_${maxResults}_${videoType}_${maxVideos}`;
       const cached = cache.get(cacheKey);
       if (cached) {
         console.log(`Cache hit for ${cacheKey}`);
@@ -23,56 +26,69 @@ export async function getTrendingVideos(req, res) {
 
       let videos = [];
       let nextPageToken = null;
-      const targetShorts = parseInt(maxShorts);
-      const maxPages = 3; // Limit pagination to avoid quota issues
-
+      const targetVideos = parseInt(maxVideos);
+      const maxPages = 5;
       let pageCount = 0;
+
       do {
         const params = {
           part: 'snippet,statistics,contentDetails',
           chart: 'mostPopular',
           regionCode: region,
-          maxResults: Math.min(parseInt(maxResults), 50), // API max is 50
+          maxResults: Math.min(parseInt(maxResults), 50),
         };
         if (categoryId) params.videoCategoryId = categoryId;
         if (nextPageToken) params.pageToken = nextPageToken;
 
-        console.log(`Fetching page ${pageCount + 1} for region ${region}, category ${categoryId || 'all'}`);
+        console.log(`Fetching page ${pageCount + 1} for region ${region}, category ${categoryId || 'all'}, videoType ${videoType}`);
         const data = await callYouTubeAPI('videos', params);
         console.log(`Received ${data.items.length} items, nextPageToken: ${data.nextPageToken || 'none'}`);
 
-        const newVideos = data.items.map(video => ({
-          id: video.id,
-          title: video.snippet.title,
-          channel: video.snippet.channelTitle,
-          thumbnail: video.snippet.thumbnails.high.url,
-          views: video.statistics.viewCount,
-          likes: video.statistics.likeCount,
-          embedUrl: `https://www.youtube.com/watch?v=${video.id}`,
-          duration: video.contentDetails.duration,
-          isShort: parseISO8601Duration(video.contentDetails.duration) <= 60 || (video.snippet.tags && video.snippet.tags.includes('#shorts')),
-        }));
+        const newVideos = data.items.map(video => {
+          const durationSecs = parseISO8601Duration(video.contentDetails.duration);
+          return {
+            id: video.id,
+            title: video.snippet.title,
+            channel: video.snippet.channelTitle,
+            thumbnail: video.snippet.thumbnails.high.url,
+            views: video.statistics.viewCount,
+            likes: video.statistics.likeCount,
+            embedUrl: `https://www.youtube.com/watch?v=${video.id}`,
+            duration: video.contentDetails.duration,
+            isShort: durationSecs <= 60 || (video.snippet.tags && video.snippet.tags.some(tag => tag.toLowerCase().includes('short'))),
+            isLong: durationSecs > 60,
+          };
+        });
 
         videos.push(...newVideos);
         nextPageToken = data.nextPageToken || null;
         pageCount++;
 
-        // Stop if we have enough Shorts or no more pages
-        if (shortsOnly === 'true' && videos.filter(v => v.isShort).length >= targetShorts) break;
+        // Keep fetching until we reach target count for short/long videos
+        if (videoType !== 'all') {
+          const filteredCount = videos.filter(v => videoType === 'short' ? v.isShort : v.isLong).length;
+          if (filteredCount >= targetVideos) break;
+        }
+
         if (!nextPageToken || pageCount >= maxPages) break;
       } while (true);
 
-      // Filter for Shorts if requested
       let filteredVideos = videos;
-      if (shortsOnly === 'true') {
-        filteredVideos = videos.filter(v => v.isShort).slice(0, targetShorts);
+      let fallbackReason = null;
+
+      if (videoType === 'short') {
+        filteredVideos = videos.filter(v => v.isShort).slice(0, targetVideos);
+      } else if (videoType === 'long') {
+        filteredVideos = videos.filter(v => v.isLong).slice(0, targetVideos);
       } else {
         filteredVideos = videos.slice(0, parseInt(maxResults));
       }
 
-      // Fallback: If no videos (or Shorts), try a single call without pagination
-      if (filteredVideos.length === 0) {
-        console.log(`No ${shortsOnly === 'true' ? 'Shorts' : 'videos'} found for region ${region}, category ${categoryId || 'all'}, trying fallback`);
+      // fallback if no short/long found
+      if (filteredVideos.length === 0 && videoType !== 'all') {
+        console.log(`No ${videoType} videos found for region ${region}, category ${categoryId || 'all'}, using fallback`);
+        fallbackReason = `No ${videoType} videos found in trending ${categoryId ? 'category ' + categoryId : 'videos'} for region ${region}. Showing all trending videos instead.`;
+
         const fallbackParams = {
           part: 'snippet,statistics,contentDetails',
           chart: 'mostPopular',
@@ -82,22 +98,29 @@ export async function getTrendingVideos(req, res) {
         if (categoryId) fallbackParams.videoCategoryId = categoryId;
 
         const fallbackData = await callYouTubeAPI('videos', fallbackParams);
-        filteredVideos = fallbackData.items.map(video => ({
-          id: video.id,
-          title: video.snippet.title,
-          channel: video.snippet.channelTitle,
-          thumbnail: video.snippet.thumbnails.high.url,
-          views: video.statistics.viewCount,
-          likes: video.statistics.likeCount,
-          embedUrl: `https://www.youtube.com/watch?v=${video.id}`,
-          duration: video.contentDetails.duration,
-          isShort: parseISO8601Duration(video.contentDetails.duration) <= 60 || (video.snippet.tags && video.snippet.tags.includes('#shorts')),
-        })).slice(0, parseInt(maxResults));
+        filteredVideos = fallbackData.items.map(video => {
+          const durationSecs = parseISO8601Duration(video.contentDetails.duration);
+          return {
+            id: video.id,
+            title: video.snippet.title,
+            channel: video.snippet.channelTitle,
+            thumbnail: video.snippet.thumbnails.high.url,
+            views: video.statistics.viewCount,
+            likes: video.statistics.likeCount,
+            embedUrl: `https://www.youtube.com/watch?v=${video.id}`,
+            duration: video.contentDetails.duration,
+            isShort: durationSecs <= 60 || (video.snippet.tags && video.snippet.tags.some(tag => tag.toLowerCase().includes('short'))),
+            isLong: durationSecs > 60,
+          };
+        }).slice(0, parseInt(maxResults));
       }
 
-      console.log(`Final videos for ${region}: ${filteredVideos.length} (${filteredVideos.filter(v => v.isShort).length} Shorts)`);
-      cache.set(cacheKey, filteredVideos);
-      results[region] = filteredVideos;
+      console.log(`Final videos for ${region}: ${filteredVideos.length} (Shorts: ${filteredVideos.filter(v => v.isShort).length}, Long: ${filteredVideos.filter(v => v.isLong).length})`);
+      const response = { videos: filteredVideos };
+      if (fallbackReason) response.fallbackReason = fallbackReason;
+
+      cache.set(cacheKey, response);
+      results[region] = response;
     }
     res.json(results);
   } catch (error) {

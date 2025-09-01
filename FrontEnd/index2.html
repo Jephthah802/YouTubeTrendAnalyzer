@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrendTube - YouTube Trending Explorer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --background: hsl(0, 0%, 100%);
+            --foreground: hsl(0, 0%, 9%);
+            --card: hsl(0, 0%, 100%);
+            --card-foreground: hsl(0, 0%, 9%);
+            --muted: hsl(0, 0%, 96%);
+            --muted-foreground: hsl(0, 0%, 45%);
+            --border: hsl(0, 0%, 89%);
+            --input: hsl(0, 0%, 89%);
+            --youtube-red: hsl(0, 100%, 50%);
+            --youtube-red-dark: hsl(0, 100%, 45%);
+            --youtube-red-light: hsl(0, 100%, 55%);
+            --glass-bg: hsl(0, 0%, 0%, 0.1);
+            --glass-border: hsl(0, 0%, 100%, 0.2);
+            --gradient-hero: linear-gradient(135deg, hsl(0, 100%, 50%), hsl(0, 100%, 45%));
+            --gradient-glass: linear-gradient(145deg, hsl(0, 0%, 0%, 0.1), hsl(0, 0%, 0%, 0.05));
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 0.75rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --sidebar-width: 280px;
+        }
+        .dark {
+            --background: hsl(0, 0%, 9%);
+            --foreground: hsl(0, 0%, 95%);
+            --card: hsl(0, 0%, 9%);
+            --card-foreground: hsl(0, 0%, 95%);
+            --muted: hsl(0, 0%, 15%);
+            --muted-foreground: hsl(0, 0%, 65%);
+            --border: hsl(0, 0%, 15%);
+            --input: hsl(0, 0%, 15%);
+            --glass-bg: hsl(0, 0%, 100%, 0.05);
+            --glass-border: hsl(0, 0%, 100%, 0.1);
+            --gradient-glass: linear-gradient(145deg, hsl(0, 0%, 100%, 0.05), hsl(0, 0%, 100%, 0.02));
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+        }
+        .min-h-screen {
+            min-height: 100vh;
+            flex: 1;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xl);
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--card);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: var(--spacing-lg);
+            overflow-y: hidden;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            border-right: 1px solid var(--border);
+        }
+        .sidebar.show {
+            transform: translateX(0);
+        }
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--border);
+        }
+        .sidebar-header h2 {
+            font-size: 1.4rem;
+            color: var(--youtube-red);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        .close-sidebar {
+            background: none;
+            border: none;
+            color: var(--foreground);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: var(--spacing-xs);
+            border-radius: var(--radius-sm);
+        }
+        .close-sidebar:hover {
+            background-color: var(--muted);
+        }
+        .sidebar-section {
+            margin-bottom: var(--spacing-xl);
+        }
+        .sidebar-heading {
+            font-size: 1.1rem;
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            color: var(--foreground);
+        }
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--spacing-xs);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background-color: var(--muted);
+        }
+        .sidebar-item.active {
+            background-color: var(--youtube-red);
+            color: white;
+        }
+        .sidebar-item i {
+            margin-right: var(--spacing-sm);
+            font-size: 1.2rem;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+        .overlay.show {
+            display: block;
+        }
+        .auth-button {
+            position: absolute;
+            top: var(--spacing-md);
+            right: 2rem;
+            display: flex;
+            gap: var(--spacing-sm);
+            z-index: 101;
+        }
+        .auth-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background-color: transparent;
+            border: 1px solid var(--glass-border);
+            color: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+        .auth-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .auth-btn.signup {
+            background-color: var(--youtube-red);
+            border-color: var(--youtube-red);
+        }
+        .auth-btn.signup:hover {
+            background-color: var(--youtube-red-dark);
+        }
+        .hero-banner {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            overflow: hidden;
+            border-radius: var(--radius-md);
+            background: var(--gradient-hero);
+            margin-bottom: var(--spacing-xl);
+        }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, hsl(0, 0%, 0%, 0.8), hsl(0, 0%, 0%, 0.6), transparent);
+        }
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            gap: var(--spacing-md);
+        }
+        .hero-text {
+            max-width: 600px;
+        }
+        .hero-title {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: var(--spacing-sm);
+        }
+        @media (min-width: 768px) {
+            .hero-title {
+                font-size: 2.25rem;
+            }
+        }
+        .highlight {
+            color: var(--youtube-red);
+        }
+        .hero-description {
+            font-size: 1rem;
+            color: hsl(0, 0%, 80%);
+            margin-bottom: var(--spacing-md);
+        }
+        @media (min-width: 768px) {
+            .hero-description {
+                font-size: 1.125rem;
+            }
+        }
+        .theme-toggle {
+            position: absolute;
+            top: var(--spacing-md);
+            right: 80px;
+            width: 44px;
+            height: 44px;
+            border: 1px solid hsl(0, 0%, 100%, 0.2);
+            background: hsl(0, 0%, 0%, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-sm);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .theme-toggle:hover {
+            background: hsl(0, 0%, 100%, 0.2);
+        }
+        .theme-icon {
+            width: 20px;
+            height: 20px;
+        }
+        .dark .sun-icon {
+            display: block;
+        }
+        .dark .moon-icon {
+            display: none;
+        }
+        body:not(.dark) .sun-icon {
+            display: none;
+        }
+        body:not(.dark) .moon-icon {
+            display: block;
+        }
+        .search-controls {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            padding: var(--spacing-lg);
+            background: var(--gradient-glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+        }
+        @media (min-width: 768px) {
+            .search-controls {
+                flex-direction: row;
+                align-items: flex-end;
+            }
+        }
+        .control-group {
+            position: relative;
+            flex: 1;
+        }
+        .search-icon {
+            position: absolute;
+            left: var(--spacing-md);
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: var(--muted-foreground);
+        }
+        select, input {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) 40px;
+            background: hsl(var(--background), 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--foreground);
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            height: 48px;
+        }
+        select {
+            padding-left: var(--spacing-md);
+        }
+        @media (min-width: 768px) {
+            select {
+                width: 180px;
+            }
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--youtube-red);
+            box-shadow: 0 0 0 2px hsl(var(--youtube-red), 0.2);
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--foreground);
+            margin-bottom: var(--spacing-lg);
+        }
+        .categories-container {
+            padding: var(--spacing-lg);
+            background: var(--gradient-glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+        }
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+        .category-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: hsl(var(--background), 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--foreground);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        .category-btn:hover, .category-btn.active {
+            background: var(--youtube-red);
+            color: white;
+            border-color: var(--youtube-red);
+            transform: translateY(-1px);
+        }
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+        }
+        @media (min-width: 1024px) {
+            .videos-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+        .video-card {
+            background: hsl(var(--card), 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        .video-card:hover {
+            background: hsl(var(--card), 0.8);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        .thumbnail {
+            position: relative;
+        }
+        .thumbnail img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        .duration {
+            position: absolute;
+            bottom: var(--spacing-sm);
+            right: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: hsl(0, 0%, 0%, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+        }
+        .duration-icon {
+            width: 12px;
+            height: 12px;
+        }
+        .video-info {
+            padding: var(--spacing-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        .video-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            line-height: 1.3;
+            color: var(--foreground);
+            transition: color 0.2s ease;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 2.6rem;
+        }
+        .video-card:hover .video-title {
+            color: var(--youtube-red);
+        }
+        .channel {
+            color: var(--muted-foreground);
+            font-size: 0.8rem;
+        }
+        .stats {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--muted-foreground);
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stat-item svg {
+            width: 12px;
+            height: 12px;
+        }
+        .video-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--spacing-sm);
+            padding-top: var(--spacing-sm);
+            border-top: 1px solid var(--border);
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--muted-foreground);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            color: var(--youtube-red);
+            background-color: var(--muted);
+        }
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-md);
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: hsl(0, 0%, 0%, 0.8);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            position: relative;
+            background: var(--background);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            max-width: 400px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border);
+        }
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+        .close-modal {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            color: var(--muted-foreground);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .close-modal:hover {
+            color: var(--foreground);
+            background: var(--muted);
+        }
+        .modal-body {
+            padding: var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--border);
+        }
+        .btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background-color: var(--youtube-red);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--youtube-red-dark);
+        }
+        .btn-secondary {
+            background-color: var(--muted);
+            color: var(--foreground);
+        }
+        .btn-secondary:hover {
+            background-color: var(--border);
+        }
+        .playlist-options {
+            margin-top: var(--spacing-md);
+        }
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .playlist-item:last-child {
+            border-bottom: none;
+        }
+        .playlist-checkbox {
+            margin-right: var(--spacing-sm);
+        }
+        .new-playlist-input {
+            width: 100%;
+            padding: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background-color: var(--input);
+            color: var(--foreground);
+        }
+        .loading {
+            text-align: center;
+            padding: var(--spacing-xl);
+            font-size: 1.2rem;
+            color: var(--muted-foreground);
+        }
+        .loading i {
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error, .fallback {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--muted-foreground);
+        }
+        .error {
+            color: var(--youtube-red);
+        }
+        @media (min-width: 992px) {
+            body {
+                padding-left: var(--sidebar-width);
+            }
+            .sidebar {
+                transform: translateX(0);
+            }
+            .menu-btn {
+                display: none;
+            }
+            .overlay {
+                display: none !important;
+            }
+        }
+        @media (max-width: 991px) {
+            body {
+                padding-left: 0;
+            }
+        }
+        @media (max-width: 768px) {
+            .videos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            .search-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .auth-button {
+                top: var(--spacing-sm);
+                right: var(--spacing-sm);
+            }
+            .auth-btn {
+                padding: var(--spacing-xs) var(--spacing-sm);
+                font-size: 0.9rem;
+            }
+            .theme-toggle {
+                right: 140px;
+            }
+        }
+        @media (max-width: 480px) {
+            .videos-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero-title {
+                font-size: 1.5rem;
+            }
+            .hero-description {
+                font-size: 1rem;
+            }
+            .sidebar {
+                width: 85%;
+            }
+            .auth-button {
+                flex-direction: column;
+                gap: var(--spacing-xs);
+            }
+            .theme-toggle {
+                right: var(--spacing-md);
+                top: 70px;
+            }
+        }
+        .menu-btn {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            width: 44px;
+            height: 44px;
+            border: 1px solid hsl(0, 0%, 100%, 0.2);
+            background: hsl(0, 0%, 0%, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-sm);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 101;
+        }
+        .menu-btn:hover {
+            background: hsl(0, 0%, 100%, 0.2);
+        }
+    </style>
+</head>
+<body class="dark">
+    <div class="overlay" id="overlay"></div>
+    <button class="menu-btn" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-list"></i> TrendTube</h2>
+            <button class="close-sidebar" id="close-sidebar"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-item active" id="home-btn">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-heading">LIBRARY</div>
+            <div class="sidebar-item" id="favorites-btn">
+                <i class="fas fa-heart"></i>
+                <span>Favorites</span>
+            </div>
+            <div class="sidebar-item" id="playlists-btn">
+                <i class="fas fa-list"></i>
+                <span>Playlists</span>
+            </div>
+        </div>
+        <div class="sidebar-section" id="playlists-section">
+            <div class="sidebar-heading">YOUR PLAYLISTS</div>
+            <div class="sidebar-item" id="create-playlist-btn">
+                <i class="fas fa-plus-circle"></i>
+                <span>Create Playlist</span>
+            </div>
+        </div>
+        <div class="sidebar-section" id="auth-section">
+            <div class="sidebar-item" id="login-btn">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Login</span>
+            </div>
+            <div class="sidebar-item" id="signup-btn">
+                <i class="fas fa-user-plus"></i>
+                <span>Sign Up</span>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <button class="theme-toggle" id="theme-toggle">
+                <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </button>
+        </div>
+    </aside>
+    <div class="min-h-screen">
+        <div class="container">
+            <div class="auth-button">
+                <button class="auth-btn login" id="login-btn-top">Login</button>
+                <button class="auth-btn signup" id="signup-btn-top">Sign Up</button>
+            </div>
+            <section class="hero-banner">
+                <div class="hero-overlay"></div>
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1 class="hero-title">
+                            Discover <span class="highlight">Trending</span> Videos
+                        </h1>
+                        <p class="hero-description">
+                            Explore the most popular videos worldwide. Filter by category, country, and discover what's trending now.
+                        </p>
+                    </div>
+                </div>
+            </section>
+            <section class="search-controls">
+                <div class="control-group">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="category-search" placeholder="Search categories..." list="category-suggestions">
+                    <datalist id="category-suggestions"></datalist>
+                </div>
+                <div class="control-group">
+                    <select id="region">
+                        <option value="US">United States</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="CA">Canada</option>
+                        <option value="AU">Australia</option>
+                        <option value="DE">Germany</option>
+                        <option value="FR">France</option>
+                        <option value="JP">Japan</option>
+                        <option value="IN">India</option>
+                        <option value="BR">Brazil</option>
+                        <option value="MX">Mexico</option>
+                        <option value="NG">Nigeria</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <select id="video-type">
+                        <option value="short">Short-Form</option>
+                        <option value="all">All Videos</option>
+                        <option value="long">Long-Form</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <select id="video-count">
+                        <option value="5">5 videos</option>
+                        <option value="10">10 videos</option>
+                        <option value="15">15 videos</option>
+                        <option value="20">20 videos</option>
+                    </select>
+                </div>
+            </section>
+            <section class="categories-section">
+                <h2 class="section-title">Categories</h2>
+                <div class="categories-container">
+                    <div class="categories" id="categories-container">
+                        <div class="category-btn active" data-category="">All Categories</div>
+                    </div>
+                </div>
+            </section>
+            <section class="videos-section">
+                <h2 class="section-title">Trending Videos</h2>
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner"></i> Loading trending videos...
+                </div>
+                <div class="error" id="error" style="display: none;"></div>
+                <div class="fallback" id="fallback" style="display: none;"></div>
+                <div class="videos-grid" id="videos-container"></div>
+            </section>
+        </div>
+    </div>
+    <!-- Login Modal -->
+    <div class="modal" id="login-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Login to TrendTube</h3>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Login to save videos to your favorites and create playlists.</p>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="close-login">Cancel</button>
+                <button class="btn btn-primary" id="submit-login">Login</button>
+            </div>
+        </div>
+    </div>
+    <!-- Signup Modal -->
+    <div class="modal" id="signup-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create an Account</h3>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Sign up to save videos to your favorites and create playlists.</p>
+                <div class="form-group">
+                    <label for="signup-name">Full Name</label>
+                    <input type="text" id="signup-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm">Confirm Password</label>
+                    <input type="password" id="signup-confirm" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="close-signup">Cancel</button>
+                <button class="btn btn-primary" id="submit-signup">Sign Up</button>
+            </div>
+        </div>
+    </div>
+    <!-- Playlist Modal -->
+    <div class="modal" id="playlist-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add to Playlist</h3>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Select playlists to add this video to:</p>
+                <div class="playlist-options" id="playlist-options"></div>
+                <div class="playlist-item">
+                    <input type="checkbox" id="new-playlist-check" class="playlist-checkbox">
+                    <label for="new-playlist-check">Create new playlist</label>
+                </div>
+                <input type="text" class="new-playlist-input" id="new-playlist-input" placeholder="New playlist name" style="display: none;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="close-playlist-modal">Cancel</button>
+                <button class="btn btn-primary" id="save-to-playlist">Save</button>
+            </div>
+        </div>
+    </div>
+    <!-- Auth Required Modal -->
+    <div class="modal" id="auth-required-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Authentication Required</h3>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>You need to be logged in to save videos to favorites or playlists.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="close-auth-required">Cancel</button>
+                <button class="btn btn-primary" id="go-to-login">Login</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const themeToggle = document.getElementById('theme-toggle');
+            const categorySearch = document.getElementById('category-search');
+            const categorySuggestions = document.getElementById('category-suggestions');
+            const regionSelect = document.getElementById('region');
+            const videoTypeSelect = document.getElementById('video-type');
+            const videoCount = document.getElementById('video-count');
+            const categoriesContainer = document.getElementById('categories-container');
+            const videosContainer = document.getElementById('videos-container');
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('error');
+            const fallbackElement = document.getElementById('fallback');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const closeSidebar = document.getElementById('close-sidebar');
+            const overlay = document.getElementById('overlay');
+            const loginBtn = document.getElementById('login-btn');
+            const loginBtnTop = document.getElementById('login-btn-top');
+            const signupBtn = document.getElementById('signup-btn');
+            const signupBtnTop = document.getElementById('signup-btn-top');
+            const favoritesBtn = document.getElementById('favorites-btn');
+            const playlistsBtn = document.getElementById('playlists-btn');
+            const createPlaylistBtn = document.getElementById('create-playlist-btn');
+            const loginModal = document.getElementById('login-modal');
+            const signupModal = document.getElementById('signup-modal');
+            const playlistModal = document.getElementById('playlist-modal');
+            const authRequiredModal = document.getElementById('auth-required-modal');
+            const closeModalButtons = document.querySelectorAll('.close-modal');
+            const closeLoginBtn = document.getElementById('close-login');
+            const submitLoginBtn = document.getElementById('submit-login');
+            const closeSignupBtn = document.getElementById('close-signup');
+            const submitSignupBtn = document.getElementById('submit-signup');
+            const closePlaylistModalBtn = document.getElementById('close-playlist-modal');
+            const saveToPlaylistBtn = document.getElementById('save-to-playlist');
+            const closeAuthRequiredBtn = document.getElementById('close-auth-required');
+            const goToLoginBtn = document.getElementById('go-to-login');
+            const newPlaylistCheck = document.getElementById('new-playlist-check');
+            const newPlaylistInput = document.getElementById('new-playlist-input');
+            const playlistOptions = document.getElementById('playlist-options');
+            const playlistsSection = document.getElementById('playlists-section');
+            const authSection = document.getElementById('auth-section');
+
+            // Current state
+            let categories = [];
+            let currentCategory = '';
+            let currentRegion = 'US';
+            let currentVideoType = 'short';
+            let currentVideoCount = 5;
+            let isDarkTheme = true;
+            let isLoggedIn = false;
+            let currentUser = null;
+            let userPlaylists = [];
+            let currentVideoToAdd = null;
+
+            // Initialize the page
+            async function initializePage() {
+                checkLoginStatus();
+                themeToggle.addEventListener('click', toggleTheme);
+                categorySearch.addEventListener('input', filterCategories);
+                categorySearch.addEventListener('change', handleCategorySearch);
+                regionSelect.addEventListener('change', updateRegion);
+                videoTypeSelect.addEventListener('change', updateVideoType);
+                videoCount.addEventListener('change', updateVideoCount);
+                sidebarToggle.addEventListener('click', toggleSidebar);
+                closeSidebar.addEventListener('click', toggleSidebar);
+                loginBtn.addEventListener('click', openLoginModal);
+                loginBtnTop.addEventListener('click', openLoginModal);
+                signupBtn.addEventListener('click', openSignupModal);
+                signupBtnTop.addEventListener('click', openSignupModal);
+                favoritesBtn.addEventListener('click', () => window.location.href = 'favorites.html');
+                playlistsBtn.addEventListener('click', () => window.location.href = 'playlists.html');
+                createPlaylistBtn.addEventListener('click', createNewPlaylist);
+                closeModalButtons.forEach(btn => btn.addEventListener('click', closeAllModals));
+                closeLoginBtn.addEventListener('click', () => loginModal.style.display = 'none');
+                submitLoginBtn.addEventListener('click', handleLogin);
+                closeSignupBtn.addEventListener('click', () => signupModal.style.display = 'none');
+                submitSignupBtn.addEventListener('click', handleSignup);
+                closePlaylistModalBtn.addEventListener('click', () => playlistModal.style.display = 'none');
+                saveToPlaylistBtn.addEventListener('click', saveToPlaylist);
+                closeAuthRequiredBtn.addEventListener('click', () => authRequiredModal.style.display = 'none');
+                goToLoginBtn.addEventListener('click', () => {
+                    authRequiredModal.style.display = 'none';
+                    openLoginModal();
+                });
+                newPlaylistCheck.addEventListener('change', toggleNewPlaylistInput);
+
+                if (window.innerWidth <= 991) {
+                    sidebar.classList.remove('show');
+                    overlay.style.display = 'none';
+                } else {
+                    sidebar.classList.add('show');
+                }
+
+                await fetchCategories();
+                fetchTrendingVideos();
+            }
+
+            function checkLoginStatus() {
+                const userData = localStorage.getItem('currentUser');
+                if (userData) {
+                    currentUser = JSON.parse(userData);
+                    isLoggedIn = true;
+                    updateAuthUI();
+                    const playlists = localStorage.getItem(`playlists_${currentUser.email}`);
+                    if (playlists) {
+                        userPlaylists = JSON.parse(playlists);
+                        renderPlaylists();
+                    }
+                }
+            }
+
+            function updateAuthUI() {
+                if (isLoggedIn) {
+                    authSection.innerHTML = `
+                        <div class="sidebar-item">
+                            <i class="fas fa-user"></i>
+                            <span>${currentUser.name}</span>
+                        </div>
+                        <div class="sidebar-item" id="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </div>
+                    `;
+                    document.getElementById('logout-btn').addEventListener('click', handleLogout);
+                    loginBtnTop.style.display = 'none';
+                    signupBtnTop.style.display = 'none';
+                } else {
+                    authSection.innerHTML = `
+                        <div class="sidebar-item" id="login-btn">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Login</span>
+                        </div>
+                        <div class="sidebar-item" id="signup-btn">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Sign Up</span>
+                        </div>
+                    `;
+                    document.getElementById('login-btn').addEventListener('click', openLoginModal);
+                    document.getElementById('signup-btn').addEventListener('click', openSignupModal);
+                    loginBtnTop.style.display = 'block';
+                    signupBtnTop.style.display = 'block';
+                }
+            }
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
+            }
+
+            function toggleTheme() {
+                isDarkTheme = !isDarkTheme;
+                document.body.classList.toggle('dark', isDarkTheme);
+                themeToggle.innerHTML = isDarkTheme ? 
+                    `<svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>` :
+                    `<svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>`;
+            }
+
+            async function fetchCategories() {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/categories?regionCode=${currentRegion}`);
+                    if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
+                    categories = await response.json();
+                    updateCategories();
+                } catch (error) {
+                    showError(`Error fetching categories: ${error.message}`);
+                }
+            }
+
+            function updateCategories() {
+                const searchTerm = categorySearch.value.toLowerCase();
+                categoriesContainer.innerHTML = '<div class="category-btn active" data-category="">All Categories</div>';
+                categories
+                    .filter(cat => cat.title.toLowerCase().includes(searchTerm))
+                    .forEach(cat => {
+                        const button = document.createElement('div');
+                        button.className = 'category-btn';
+                        button.dataset.category = cat.id;
+                        button.textContent = cat.title;
+                        button.addEventListener('click', () => selectCategory(button));
+                        categoriesContainer.appendChild(button);
+                    });
+
+                categorySuggestions.innerHTML = '';
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.title;
+                    option.dataset.id = cat.id;
+                    categorySuggestions.appendChild(option);
+                });
+            }
+
+            function filterCategories() {
+                updateCategories();
+            }
+
+            function handleCategorySearch(e) {
+                const selectedOption = Array.from(categorySuggestions.options)
+                    .find(option => option.value === e.target.value);
+                if (selectedOption) {
+                    const categoryId = selectedOption.dataset.id;
+                    selectCategoryById(categoryId);
+                    e.target.value = '';
+                }
+            }
+
+            async function updateRegion() {
+                currentRegion = regionSelect.value;
+                await fetchCategories();
+                fetchTrendingVideos();
+            }
+
+            function updateVideoType() {
+                currentVideoType = videoTypeSelect.value;
+                fetchTrendingVideos();
+            }
+
+            function updateVideoCount() {
+                currentVideoCount = parseInt(videoCount.value);
+                if (currentVideoCount < 1) currentVideoCount = 1;
+                if (currentVideoCount > 20) currentVideoCount = 20;
+                videoCount.value = currentVideoCount;
+                fetchTrendingVideos();
+            }
+
+            function selectCategory(button) {
+                document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                currentCategory = button.dataset.category;
+                fetchTrendingVideos();
+            }
+
+            function selectCategoryById(categoryId) {
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.category === categoryId);
+                });
+                currentCategory = categoryId;
+                fetchTrendingVideos();
+            }
+
+            async function fetchTrendingVideos() {
+                loadingElement.style.display = 'block';
+                errorElement.style.display = 'none';
+                fallbackElement.style.display = 'none';
+                videosContainer.innerHTML = '';
+
+                try {
+                    const url = `http://localhost:5000/api/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Failed to fetch videos: ${response.status}`);
+                    const data = await response.json();
+                    displayVideos(data[currentRegion]);
+                } catch (error) {
+                    showError(`Error fetching videos: ${error.message}`);
+                } finally {
+                    loadingElement.style.display = 'none';
+                }
+            }
+
+            function displayVideos({ videos, fallbackReason }) {
+                if (videos.length === 0) {
+                    fallbackElement.style.display = 'block';
+                    fallbackElement.textContent = fallbackReason || 'No videos found for the selected filters.';
+                    return;
+                }
+                if (fallbackReason) {
+                    fallbackElement.style.display = 'block';
+                    fallbackElement.textContent = fallbackReason;
+                }
+                videos.slice(0, currentVideoCount).forEach(video => {
+                    const videoCard = document.createElement('div');
+                    videoCard.className = 'video-card';
+                    videoCard.innerHTML = `
+                        <div class="thumbnail">
+                            <img src="${video.thumbnail}" alt="${video.title}">
+                            <div class="duration"><svg class="duration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${video.duration}</div>
+                        </div>
+                        <div class="video-info">
+                            <h3 class="video-title">${video.title}</h3>
+                            <div class="channel">${video.channel}</div>
+                            <div class="stats">
+                                <span class="stat-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${video.views}</span>
+                                <span class="stat-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${video.likes}</span>
+                            </div>
+                        </div>
+                        <div class="video-actions">
+                            <button class="action-btn like-btn" data-video-id="${video.id}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                <span>Favorite</span>
+                            </button>
+                            <button class="action-btn playlist-btn" data-video-id="${video.id}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                                <span>Add to Playlist</span>
+                            </button>
+                        </div>
+                    `;
+                    videoCard.addEventListener('click', (e) => {
+                        if (!e.target.closest('.action-btn')) {
+                            window.open(video.embedUrl, '_blank');
+                        }
+                    });
+                    const likeBtn = videoCard.querySelector('.like-btn');
+                    const playlistBtn = videoCard.querySelector('.playlist-btn');
+                    likeBtn.addEventListener('click', () => addToFavorites(video));
+                    playlistBtn.addEventListener('click', () => openPlaylistModal(video));
+                    videosContainer.appendChild(videoCard);
+                });
+            }
+
+            function addToFavorites(video) {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                let favorites = JSON.parse(localStorage.getItem(`favorites_${currentUser.email}`)) || [];
+                if (!favorites.some(fav => fav.id === video.id)) {
+                    favorites.push(video);
+                    localStorage.setItem(`favorites_${currentUser.email}`, JSON.stringify(favorites));
+                    alert('Video added to favorites!');
+                } else {
+                    alert('This video is already in your favorites!');
+                }
+            }
+
+            function openPlaylistModal(video) {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                currentVideoToAdd = video;
+                renderPlaylistOptions();
+                playlistModal.classList.add('show');
+            }
+
+            function renderPlaylistOptions() {
+                playlistOptions.innerHTML = '';
+                if (userPlaylists.length === 0) {
+                    playlistOptions.innerHTML = '<p>You don\'t have any playlists yet.</p>';
+                    return;
+                }
+                userPlaylists.forEach(playlist => {
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = 'playlist-item';
+                    const hasVideo = playlist.videos.some(v => v.id === currentVideoToAdd.id);
+                    playlistItem.innerHTML = `
+                        <input type="checkbox" id="playlist-${playlist.name}" 
+                            class="playlist-checkbox" ${hasVideo ? 'disabled' : ''}>
+                        <label for="playlist-${playlist.name}">${playlist.name} (${playlist.videos.length})</label>
+                    `;
+                    if (hasVideo) {
+                        playlistItem.innerHTML += `<span style="margin-left: 10px; color: var(--muted-foreground); font-size: 0.8rem;">Already added</span>`;
+                    }
+                    playlistOptions.appendChild(playlistItem);
+                });
+            }
+
+            function toggleNewPlaylistInput() {
+                newPlaylistInput.style.display = newPlaylistCheck.checked ? 'block' : 'none';
+            }
+
+            function saveToPlaylist() {
+                if (newPlaylistCheck.checked && newPlaylistInput.value.trim()) {
+                    const newPlaylistName = newPlaylistInput.value.trim();
+                    const newPlaylist = {
+                        name: newPlaylistName,
+                        videos: [currentVideoToAdd]
+                    };
+                    userPlaylists.push(newPlaylist);
+                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                    renderPlaylists();
+                }
+                const checkboxes = document.querySelectorAll('.playlist-checkbox:not(#new-playlist-check)');
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked && !checkbox.disabled) {
+                        const playlistName = checkbox.id.replace('playlist-', '');
+                        const playlist = userPlaylists.find(p => p.name === playlistName);
+                        if (playlist && !playlist.videos.some(v => v.id === currentVideoToAdd.id)) {
+                            playlist.videos.push(currentVideoToAdd);
+                        }
+                    }
+                });
+                localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                playlistModal.classList.remove('show');
+                newPlaylistCheck.checked = false;
+                newPlaylistInput.style.display = 'none';
+                newPlaylistInput.value = '';
+                alert('Video added to playlist(s)!');
+            }
+
+            function renderPlaylists() {
+                const existingPlaylists = playlistsSection.querySelectorAll('.sidebar-item:not(#create-playlist-btn)');
+                existingPlaylists.forEach(item => item.remove());
+                userPlaylists.forEach(playlist => {
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = 'sidebar-item';
+                    playlistItem.dataset.playlist = playlist.name;
+                    playlistItem.innerHTML = `
+                        <i class="fas fa-list-ul"></i>
+                        <span>${playlist.name}</span>
+                    `;
+                    playlistItem.addEventListener('click', () => window.location.href = `playlist.html?name=${encodeURIComponent(playlist.name)}`);
+                    playlistsSection.insertBefore(playlistItem, createPlaylistBtn);
+                });
+            }
+
+            function openLoginModal() {
+                loginModal.classList.add('show');
+            }
+
+            function openSignupModal() {
+                signupModal.classList.add('show');
+            }
+
+            function showAuthRequiredModal() {
+                authRequiredModal.classList.add('show');
+            }
+
+            function closeAllModals() {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.remove('show');
+                });
+            }
+
+            function handleLogin() {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                if (!email || !password) {
+                    alert('Please enter both email and password.');
+                    return;
+                }
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                const user = users.find(u => u.email === email && u.password === password);
+                if (user) {
+                    currentUser = { name: user.name, email: user.email };
+                    isLoggedIn = true;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    const playlists = localStorage.getItem(`playlists_${currentUser.email}`);
+                    if (playlists) {
+                        userPlaylists = JSON.parse(playlists);
+                        renderPlaylists();
+                    }
+                    updateAuthUI();
+                    loginModal.classList.remove('show');
+                    alert(`Welcome back, ${user.name}!`);
+                } else {
+                    alert('Invalid email or password.');
+                }
+            }
+
+            function handleSignup() {
+                const name = document.getElementById('signup-name').value;
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                const confirm = document.getElementById('signup-confirm').value;
+                if (!name || !email || !password || !confirm) {
+                    alert('Please fill in all fields.');
+                    return;
+                }
+                if (password !== confirm) {
+                    alert('Passwords do not match.');
+                    return;
+                }
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                if (users.some(u => u.email === email)) {
+                    alert('An account with this email already exists.');
+                    return;
+                }
+                const newUser = { name, email, password };
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+                currentUser = { name, email };
+                isLoggedIn = true;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                userPlaylists = [];
+                localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                updateAuthUI();
+                signupModal.classList.remove('show');
+                alert(`Welcome to TrendTube, ${name}!`);
+            }
+
+            function handleLogout() {
+                if (confirm('Are you sure you want to logout?')) {
+                    localStorage.removeItem('currentUser');
+                    isLoggedIn = false;
+                    currentUser = null;
+                    userPlaylists = [];
+                    updateAuthUI();
+                    const existingPlaylists = playlistsSection.querySelectorAll('.sidebar-item:not(#create-playlist-btn)');
+                    existingPlaylists.forEach(item => item.remove());
+                    alert('You have been logged out.');
+                }
+            }
+
+            function createNewPlaylist() {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                const playlistName = prompt('Enter a name for your new playlist:');
+                if (playlistName && playlistName.trim()) {
+                    const newPlaylist = {
+                        name: playlistName.trim(),
+                        videos: []
+                    };
+                    userPlaylists.push(newPlaylist);
+                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                    renderPlaylists();
+                    alert(`Playlist "${playlistName}" created!`);
+                }
+            }
+
+            function showError(message) {
+                errorElement.style.display = 'block';
+                errorElement.textContent = message;
+                loadingElement.style.display = 'none';
+            }
+
+            initializePage();
+        });
+    </script>
+</body>
+</html>

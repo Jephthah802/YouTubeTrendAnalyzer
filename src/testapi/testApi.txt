@@ -1,0 +1,11 @@
+short form 
+curl "http://localhost:5000/api/trending?regions=US&maxResults=10&videoType=short&maxVideos=5"
+
+long form 
+curl "http://localhost:5000/api/trending?regions=US&maxResults=10&videoType=long&maxVideos=5"
+
+all
+curl "http://localhost:5000/api/trending?regions=US&maxResults=10&videoType=all"
+
+with category
+curl "http://localhost:5000/api/trending?regions=US&maxResults=10&categoryId=10&videoType=short&maxVideos=5"
