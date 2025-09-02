@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrendTube - YouTube Trending Explorer</title>
+    <title>TrendTube - Playlists</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
@@ -80,7 +80,7 @@
             left: 0;
             top: 0;
             padding: var(--spacing-lg);
-            overflow-y: hidden;
+            overflow-y: auto;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             z-index: 100;
             transform: translateX(-100%);
@@ -115,7 +115,7 @@
             border-radius: var(--radius-sm);
             display: none;
         }
-        .sidebar.show .close-sidebar {
+        .close-sidebar.show {
             display: block;
         }
         .close-sidebar:hover {
@@ -165,59 +165,8 @@
         .overlay.show {
             display: block;
         }
-        .hero-banner {
-            position: relative;
-            height: 200px;
-            width: 100%;
-            overflow: hidden;
-            border-radius: var(--radius-md);
-            background: var(--gradient-hero);
-            margin-bottom: var(--spacing-xl);
-        }
-        .hero-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to right, hsl(0, 0%, 0%, 0.8), hsl(0, 0%, 0%, 0.6), transparent);
-        }
-        .hero-content {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            height: 100%;
-            flex-direction: column;
-            justify-content: center;
-            padding: var(--spacing-xl);
-            gap: var(--spacing-md);
-        }
-        .hero-text {
-            max-width: 600px;
-        }
-        .hero-title {
-            font-size: 1.75rem;
-            font-weight: bold;
-            color: white;
-            margin-bottom: var(--spacing-sm);
-        }
-        @media (min-width: 768px) {
-            .hero-title {
-                font-size: 2.25rem;
-            }
-        }
-        .highlight {
-            color: var(--youtube-red);
-        }
-        .hero-description {
-            font-size: 1rem;
-            color: hsl(0, 0%, 80%);
-            margin-bottom: var(--spacing-md);
-        }
-        @media (min-width: 768px) {
-            .hero-description {
-                font-size: 1.125rem;
-            }
-        }
         .theme-toggle {
-            position: fixed;
+            position: absolute;
             top: var(--spacing-md);
             right: var(--spacing-md);
             width: 44px;
@@ -232,7 +181,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 101;
         }
         .theme-toggle:hover {
             background: hsl(0, 0%, 100%, 0.2);
@@ -253,93 +201,11 @@
         body:not(.dark) .moon-icon {
             display: block;
         }
-        .search-controls {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-md);
-            padding: var(--spacing-lg);
-            background: var(--gradient-glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-md);
-        }
-        @media (min-width: 768px) {
-            .search-controls {
-                flex-direction: row;
-                align-items: flex-end;
-            }
-        }
-        .control-group {
-            position: relative;
-            flex: 1;
-        }
-        .search-icon {
-            position: absolute;
-            left: var(--spacing-md);
-            top: 50%;
-            transform: translateY(-50%);
-            width: 18px;
-            height: 18px;
-            color: var(--muted-foreground);
-        }
-        select, input {
-            width: 100%;
-            padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) 40px;
-            background: hsl(var(--background), 0.5);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-sm);
-            color: var(--foreground);
-            transition: all 0.2s ease;
-            font-size: 0.95rem;
-            height: 48px;
-        }
-        select {
-            padding-left: var(--spacing-md);
-        }
-        @media (min-width: 768px) {
-            select {
-                width: 180px;
-            }
-        }
-        select:focus, input:focus {
-            outline: none;
-            border-color: var(--youtube-red);
-            box-shadow: 0 0 0 2px hsl(var(--youtube-red), 0.2);
-        }
         .section-title {
             font-size: 1.5rem;
             font-weight: bold;
             color: var(--foreground);
             margin-bottom: var(--spacing-lg);
-        }
-        .categories-container {
-            padding: var(--spacing-lg);
-            background: var(--gradient-glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-md);
-        }
-        .categories {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--spacing-sm);
-        }
-        .category-btn {
-            padding: var(--spacing-sm) var(--spacing-md);
-            background: hsl(var(--background), 0.3);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-sm);
-            color: var(--foreground);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.9rem;
-            white-space: nowrap;
-        }
-        .category-btn:hover, .category-btn.active {
-            background: var(--youtube-red);
-            color: white;
-            border-color: var(--youtube-red);
-            transform: translateY(-1px);
         }
         .videos-grid {
             display: grid;
@@ -551,29 +417,33 @@
         .btn-secondary:hover {
             background-color: var(--border);
         }
-        .playlist-options {
-            margin-top: var(--spacing-md);
+        .playlist-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
         }
         .playlist-item {
+            background: hsl(var(--card), 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            padding: var(--spacing-sm) 0;
-            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-        .playlist-item:last-child {
-            border-bottom: none;
+        .playlist-item:hover {
+            background: hsl(var(--card), 0.8);
+            transform: translateY(-2px);
         }
-        .playlist-checkbox {
-            margin-right: var(--spacing-sm);
+        .playlist-name {
+            font-size: 1rem;
+            font-weight: 600;
         }
-        .new-playlist-input {
-            width: 100%;
-            padding: var(--spacing-sm);
-            margin-top: var(--spacing-md);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            background-color: var(--input);
-            color: var(--foreground);
+        .playlist-count {
+            font-size: 0.9rem;
+            color: var(--muted-foreground);
         }
         .loading {
             text-align: center;
@@ -618,7 +488,7 @@
             body {
                 padding-left: 0;
             }
-            .menu-btn {
+            .menu-btn.show {
                 display: flex;
             }
         }
@@ -626,29 +496,13 @@
             .videos-grid {
                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             }
-            .search-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .theme-toggle {
-                right: var(--spacing-md);
-            }
         }
         @media (max-width: 480px) {
             .videos-grid {
                 grid-template-columns: 1fr;
             }
-            .hero-title {
-                font-size: 1.5rem;
-            }
-            .hero-description {
-                font-size: 1rem;
-            }
             .sidebar {
                 width: 85%;
-            }
-            .theme-toggle {
-                top: 60px;
             }
         }
         .menu-btn {
@@ -672,21 +526,18 @@
         .menu-btn:hover {
             background: hsl(0, 0%, 100%, 0.2);
         }
-        .sidebar.show + .menu-btn {
-            display: none;
-        }
     </style>
 </head>
 <body class="dark">
     <div class="overlay" id="overlay"></div>
-    <button class="menu-btn" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+    <button class="menu-btn show" id="sidebar-toggle"><i class="fas fa-bars"></i></button>
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2><i class="fas fa-list"></i> TrendTube</h2>
             <button class="close-sidebar" id="close-sidebar"><i class="fas fa-times"></i></button>
         </div>
         <div class="sidebar-section">
-            <div class="sidebar-item active" id="home-btn">
+            <div class="sidebar-item" id="home-btn">
                 <i class="fas fa-home"></i>
                 <span>Home</span>
             </div>
@@ -697,7 +548,7 @@
                 <i class="fas fa-heart"></i>
                 <span>Favorites</span>
             </div>
-            <div class="sidebar-item" id="playlists-btn">
+            <div class="sidebar-item active" id="playlists-btn">
                 <i class="fas fa-list"></i>
                 <span>Playlists</span>
             </div>
@@ -733,75 +584,15 @@
     </aside>
     <div class="min-h-screen">
         <div class="container">
-            <section class="hero-banner">
-                <div class="hero-overlay"></div>
-                <div class="hero-content">
-                    <div class="hero-text">
-                        <h1 class="hero-title">
-                            Discover <span class="highlight">Trending</span> Videos
-                        </h1>
-                        <p class="hero-description">
-                            Explore the most popular videos worldwide. Filter by category, country, and discover what's trending now.
-                        </p>
-                    </div>
-                </div>
-            </section>
-            <section class="search-controls">
-                <div class="control-group">
-                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <input type="text" id="category-search" placeholder="Search categories..." list="category-suggestions">
-                    <datalist id="category-suggestions"></datalist>
-                </div>
-                <div class="control-group">
-                    <select id="region">
-                        <option value="US">United States</option>
-                        <option value="GB">United Kingdom</option>
-                        <option value="CA">Canada</option>
-                        <option value="AU">Australia</option>
-                        <option value="DE">Germany</option>
-                        <option value="FR">France</option>
-                        <option value="JP">Japan</option>
-                        <option value="IN">India</option>
-                        <option value="BR">Brazil</option>
-                        <option value="MX">Mexico</option>
-                        <option value="NG">Nigeria</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <select id="video-type">
-                        <option value="short">Short-Form</option>
-                        <option value="all">All Videos</option>
-                        <option value="long">Long-Form</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <select id="video-count">
-                        <option value="5">5 videos</option>
-                        <option value="10">10 videos</option>
-                        <option value="15">15 videos</option>
-                        <option value="20">20 videos</option>
-                    </select>
-                </div>
-            </section>
-            <section class="categories-section">
-                <h2 class="section-title">Categories</h2>
-                <div class="categories-container">
-                    <div class="categories" id="categories-container">
-                        <div class="category-btn active" data-category="">All Categories</div>
-                    </div>
-                </div>
-            </section>
-            <section class="videos-section">
-                <h2 class="section-title">Trending Videos</h2>
+            <section class="playlists-section">
+                <h2 class="section-title" id="section-title">Your Playlists</h2>
                 <div class="loading" id="loading">
-                    <i class="fas fa-spinner"></i> Loading trending videos...
+                    <i class="fas fa-spinner"></i> Loading playlists...
                 </div>
                 <div class="error" id="error" style="display: none;"></div>
                 <div class="fallback" id="fallback" style="display: none;"></div>
-                <div class="videos-grid" id="videos-container"></div>
+                <div class="playlist-container" id="playlists-container"></div>
+                <div class="videos-grid" id="videos-container" style="display: none;"></div>
             </section>
         </div>
     </div>
@@ -814,7 +605,7 @@
                 <button class="close-modal"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <p>Login to save videos to your favorites and create playlists.</p>
+                <p>Login to view your playlists.</p>
                 <div class="form-group">
                     <label for="login-email">Email</label>
                     <input type="email" id="login-email" required>
@@ -863,29 +654,6 @@
             </div>
         </div>
     </div>
-    <!-- Playlist Modal -->
-    <div class="modal" id="playlist-modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Add to Playlist</h3>
-                <button class="close-modal"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <p>Select playlists to add this video to:</p>
-                <div class="playlist-options" id="playlist-options"></div>
-                <div class="playlist-item">
-                    <input type="checkbox" id="new-playlist-check" class="playlist-checkbox">
-                    <label for="new-playlist-check">Create new playlist</label>
-                </div>
-                <input type="text" class="new-playlist-input" id="new-playlist-input" placeholder="New playlist name" style="display: none;">
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="close-playlist-modal">Cancel</button>
-                <button class="btn btn-primary" id="save-to-playlist">Save</button>
-            </div>
-        </div>
-    </div>
     <!-- Auth Required Modal -->
     <div class="modal" id="auth-required-modal">
         <div class="modal-overlay"></div>
@@ -895,7 +663,7 @@
                 <button class="close-modal"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <p>You need to be logged in to save videos to favorites or playlists.</p>
+                <p>You need to be logged in to view your playlists.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="close-auth-required">Cancel</button>
@@ -907,13 +675,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             // DOM Elements
             const themeToggle = document.getElementById('theme-toggle');
-            const categorySearch = document.getElementById('category-search');
-            const categorySuggestions = document.getElementById('category-suggestions');
-            const regionSelect = document.getElementById('region');
-            const videoTypeSelect = document.getElementById('video-type');
-            const videoCount = document.getElementById('video-count');
-            const categoriesContainer = document.getElementById('categories-container');
+            const playlistsContainer = document.getElementById('playlists-container');
             const videosContainer = document.getElementById('videos-container');
+            const sectionTitle = document.getElementById('section-title');
             const loadingElement = document.getElementById('loading');
             const errorElement = document.getElementById('error');
             const fallbackElement = document.getElementById('fallback');
@@ -928,47 +692,34 @@
             const createPlaylistBtn = document.getElementById('create-playlist-btn');
             const loginModal = document.getElementById('login-modal');
             const signupModal = document.getElementById('signup-modal');
-            const playlistModal = document.getElementById('playlist-modal');
             const authRequiredModal = document.getElementById('auth-required-modal');
             const closeModalButtons = document.querySelectorAll('.close-modal');
             const closeLoginBtn = document.getElementById('close-login');
             const submitLoginBtn = document.getElementById('submit-login');
             const closeSignupBtn = document.getElementById('close-signup');
             const submitSignupBtn = document.getElementById('submit-signup');
-            const closePlaylistModalBtn = document.getElementById('close-playlist-modal');
-            const saveToPlaylistBtn = document.getElementById('save-to-playlist');
             const closeAuthRequiredBtn = document.getElementById('close-auth-required');
             const goToLoginBtn = document.getElementById('go-to-login');
-            const newPlaylistCheck = document.getElementById('new-playlist-check');
-            const newPlaylistInput = document.getElementById('new-playlist-input');
-            const playlistOptions = document.getElementById('playlist-options');
             const playlistsSection = document.getElementById('playlists-section');
             const authSection = document.getElementById('auth-section');
 
             // Current state
-            let categories = [];
-            let currentCategory = '';
-            let currentRegion = 'US';
-            let currentVideoType = 'short';
-            let currentVideoCount = 5;
             let isDarkTheme = true;
             let isLoggedIn = false;
             let currentUser = null;
             let userPlaylists = [];
-            let currentVideoToAdd = null;
+            let selectedPlaylist = null;
+
+            // Get URL parameter for specific playlist
+            const urlParams = new URLSearchParams(window.location.search);
+            const playlistName = urlParams.get('name');
 
             // Initialize the page
-            async function initializePage() {
+            function initializePage() {
                 checkLoginStatus();
                 themeToggle.addEventListener('click', toggleTheme);
-                categorySearch.addEventListener('input', filterCategories);
-                categorySearch.addEventListener('change', handleCategorySearch);
-                regionSelect.addEventListener('change', updateRegion);
-                videoTypeSelect.addEventListener('change', updateVideoType);
-                videoCount.addEventListener('change', updateVideoCount);
                 sidebarToggle.addEventListener('click', toggleSidebar);
                 closeSidebar.addEventListener('click', toggleSidebar);
-                overlay.addEventListener('click', toggleSidebar);
                 loginBtn.addEventListener('click', openLoginModal);
                 signupBtn.addEventListener('click', openSignupModal);
                 favoritesBtn.addEventListener('click', () => window.location.href = 'favorites.html');
@@ -979,26 +730,34 @@
                 submitLoginBtn.addEventListener('click', handleLogin);
                 closeSignupBtn.addEventListener('click', () => signupModal.style.display = 'none');
                 submitSignupBtn.addEventListener('click', handleSignup);
-                closePlaylistModalBtn.addEventListener('click', () => playlistModal.style.display = 'none');
-                saveToPlaylistBtn.addEventListener('click', saveToPlaylist);
                 closeAuthRequiredBtn.addEventListener('click', () => authRequiredModal.style.display = 'none');
                 goToLoginBtn.addEventListener('click', () => {
                     authRequiredModal.style.display = 'none';
                     openLoginModal();
                 });
-                newPlaylistCheck.addEventListener('change', toggleNewPlaylistInput);
 
+                updateSidebarDisplay();
+                window.addEventListener('resize', updateSidebarDisplay);
+
+                if (playlistName) {
+                    loadPlaylistVideos(playlistName);
+                } else {
+                    loadPlaylists();
+                }
+            }
+
+            function updateSidebarDisplay() {
                 if (window.innerWidth <= 991) {
                     sidebar.classList.remove('show');
-                    overlay.style.display = 'none';
-                    sidebarToggle.style.display = 'flex';
+                    overlay.classList.remove('show');
+                    sidebarToggle.classList.add('show');
+                    closeSidebar.classList.remove('show');
                 } else {
                     sidebar.classList.add('show');
-                    sidebarToggle.style.display = 'none';
+                    overlay.classList.remove('show');
+                    sidebarToggle.classList.remove('show');
+                    closeSidebar.classList.remove('show');
                 }
-
-                await fetchCategories();
-                fetchTrendingVideos();
             }
 
             function checkLoginStatus() {
@@ -1012,6 +771,8 @@
                         userPlaylists = JSON.parse(playlists);
                         renderPlaylists();
                     }
+                } else {
+                    showAuthRequiredModal();
                 }
             }
 
@@ -1047,7 +808,8 @@
             function toggleSidebar() {
                 sidebar.classList.toggle('show');
                 overlay.classList.toggle('show');
-                sidebarToggle.style.display = sidebar.classList.contains('show') ? 'none' : 'flex';
+                sidebarToggle.classList.toggle('show', !sidebar.classList.contains('show'));
+                closeSidebar.classList.toggle('show', sidebar.classList.contains('show'));
             }
 
             function toggleTheme() {
@@ -1063,118 +825,68 @@
                     </svg>`;
             }
 
-            async function fetchCategories() {
-                try {
-                    const response = await fetch(`http://localhost:5000/api/categories?regionCode=${currentRegion}`);
-                    if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
-                    categories = await response.json();
-                    updateCategories();
-                } catch (error) {
-                    showError(`Error fetching categories: ${error.message}`);
+            function loadPlaylists() {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
                 }
-            }
-
-            function updateCategories() {
-                const searchTerm = categorySearch.value.toLowerCase();
-                categoriesContainer.innerHTML = '<div class="category-btn active" data-category="">All Categories</div>';
-                categories
-                    .filter(cat => cat.title.toLowerCase().includes(searchTerm))
-                    .forEach(cat => {
-                        const button = document.createElement('div');
-                        button.className = 'category-btn';
-                        button.dataset.category = cat.id;
-                        button.textContent = cat.title;
-                        button.addEventListener('click', () => selectCategory(button));
-                        categoriesContainer.appendChild(button);
-                    });
-
-                categorySuggestions.innerHTML = '';
-                categories.forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat.title;
-                    option.dataset.id = cat.id;
-                    categorySuggestions.appendChild(option);
-                });
-            }
-
-            function filterCategories() {
-                updateCategories();
-            }
-
-            function handleCategorySearch(e) {
-                const selectedOption = Array.from(categorySuggestions.options)
-                    .find(option => option.value === e.target.value);
-                if (selectedOption) {
-                    const categoryId = selectedOption.dataset.id;
-                    selectCategoryById(categoryId);
-                    e.target.value = '';
-                }
-            }
-
-            async function updateRegion() {
-                currentRegion = regionSelect.value;
-                await fetchCategories();
-                fetchTrendingVideos();
-            }
-
-            function updateVideoType() {
-                currentVideoType = videoTypeSelect.value;
-                fetchTrendingVideos();
-            }
-
-            function updateVideoCount() {
-                currentVideoCount = parseInt(videoCount.value);
-                if (currentVideoCount < 1) currentVideoCount = 1;
-                if (currentVideoCount > 20) currentVideoCount = 20;
-                videoCount.value = currentVideoCount;
-                fetchTrendingVideos();
-            }
-
-            function selectCategory(button) {
-                document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                currentCategory = button.dataset.category;
-                fetchTrendingVideos();
-            }
-
-            function selectCategoryById(categoryId) {
-                document.querySelectorAll('.category-btn').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.category === categoryId);
-                });
-                currentCategory = categoryId;
-                fetchTrendingVideos();
-            }
-
-            async function fetchTrendingVideos() {
                 loadingElement.style.display = 'block';
                 errorElement.style.display = 'none';
                 fallbackElement.style.display = 'none';
-                videosContainer.innerHTML = '';
+                playlistsContainer.style.display = 'block';
+                videosContainer.style.display = 'none';
+                sectionTitle.textContent = 'Your Playlists';
+                playlistsContainer.innerHTML = '';
 
-                try {
-                    const url = `http://localhost:5000/api/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error(`Failed to fetch videos: ${response.status}`);
-                    const data = await response.json();
-                    displayVideos(data[currentRegion]);
-                } catch (error) {
-                    showError(`Error fetching videos: ${error.message}`);
-                } finally {
-                    loadingElement.style.display = 'none';
-                }
-            }
-
-            function displayVideos({ videos, fallbackReason }) {
-                if (videos.length === 0) {
+                if (userPlaylists.length === 0) {
                     fallbackElement.style.display = 'block';
-                    fallbackElement.textContent = fallbackReason || 'No videos found for the selected filters.';
+                    fallbackElement.textContent = 'No playlists found. Create a new playlist to get started!';
+                    loadingElement.style.display = 'none';
                     return;
                 }
-                if (fallbackReason) {
-                    fallbackElement.style.display = 'block';
-                    fallbackElement.textContent = fallbackReason;
+
+                userPlaylists.forEach(playlist => {
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = 'playlist-item';
+                    playlistItem.innerHTML = `
+                        <div class="playlist-name">${playlist.name}</div>
+                        <div class="playlist-count">${playlist.videos.length} video${playlist.videos.length !== 1 ? 's' : ''}</div>
+                    `;
+                    playlistItem.addEventListener('click', () => {
+                        window.location.href = `playlists.html?name=${encodeURIComponent(playlist.name)}`;
+                    });
+                    playlistsContainer.appendChild(playlistItem);
+                });
+                loadingElement.style.display = 'none';
+            }
+
+            function loadPlaylistVideos(playlistName) {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
                 }
-                videos.slice(0, currentVideoCount).forEach(video => {
+                loadingElement.style.display = 'block';
+                errorElement.style.display = 'none';
+                fallbackElement.style.display = 'none';
+                playlistsContainer.style.display = 'none';
+                videosContainer.style.display = 'grid';
+                sectionTitle.textContent = `Playlist: ${playlistName}`;
+                videosContainer.innerHTML = '';
+
+                const playlist = userPlaylists.find(p => p.name === playlistName);
+                if (!playlist || playlist.videos.length === 0) {
+                    fallbackElement.style.display = 'block';
+                    fallbackElement.textContent = 'No videos in this playlist.';
+                    loadingElement.style.display = 'none';
+                    return;
+                }
+
+                displayPlaylistVideos(playlist.videos);
+                loadingElement.style.display = 'none';
+            }
+
+            function displayPlaylistVideos(videos) {
+                videos.forEach(video => {
                     const videoCard = document.createElement('div');
                     videoCard.className = 'video-card';
                     videoCard.innerHTML = `
@@ -1191,13 +903,9 @@
                             </div>
                         </div>
                         <div class="video-actions">
-                            <button class="action-btn like-btn" data-video-id="${video.id}">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                                <span>Favorite</span>
-                            </button>
-                            <button class="action-btn playlist-btn" data-video-id="${video.id}">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-                                <span>Add to Playlist</span>
+                            <button class="action-btn remove-btn" data-video-id="${video.id}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 6v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6M10 11v6M14 11v6"/></svg>
+                                <span>Remove</span>
                             </button>
                         </div>
                     `;
@@ -1206,108 +914,24 @@
                             window.open(video.embedUrl, '_blank');
                         }
                     });
-                    const likeBtn = videoCard.querySelector('.like-btn');
-                    const playlistBtn = videoCard.querySelector('.playlist-btn');
-                    likeBtn.addEventListener('click', () => addToFavorites(video));
-                    playlistBtn.addEventListener('click', () => openPlaylistModal(video));
+                    const removeBtn = videoCard.querySelector('.remove-btn');
+                    removeBtn.addEventListener('click', () => removeFromPlaylist(video.id, playlistName));
                     videosContainer.appendChild(videoCard);
                 });
             }
 
-            function addToFavorites(video) {
+            function removeFromPlaylist(videoId, playlistName) {
                 if (!isLoggedIn) {
                     showAuthRequiredModal();
                     return;
                 }
-                let favorites = JSON.parse(localStorage.getItem(`favorites_${currentUser.email}`)) || [];
-                if (!favorites.some(fav => fav.id === video.id)) {
-                    favorites.push(video);
-                    localStorage.setItem(`favorites_${currentUser.email}`, JSON.stringify(favorites));
-                    alert('Video added to favorites!');
-                } else {
-                    alert('This video is already in your favorites!');
-                }
-            }
-
-            function openPlaylistModal(video) {
-                if (!isLoggedIn) {
-                    showAuthRequiredModal();
-                    return;
-                }
-                currentVideoToAdd = video;
-                renderPlaylistOptions();
-                playlistModal.classList.add('show');
-            }
-
-            function renderPlaylistOptions() {
-                playlistOptions.innerHTML = '';
-                if (userPlaylists.length === 0) {
-                    playlistOptions.innerHTML = '<p>You don\'t have any playlists yet.</p>';
-                    return;
-                }
-                userPlaylists.forEach(playlist => {
-                    const playlistItem = document.createElement('div');
-                    playlistItem.className = 'playlist-item';
-                    const hasVideo = playlist.videos.some(v => v.id === currentVideoToAdd.id);
-                    playlistItem.innerHTML = `
-                        <input type="checkbox" id="playlist-${playlist.name}" 
-                            class="playlist-checkbox" ${hasVideo ? 'disabled' : ''}>
-                        <label for="playlist-${playlist.name}">${playlist.name} (${playlist.videos.length})</label>
-                    `;
-                    if (hasVideo) {
-                        playlistItem.innerHTML += `<span style="margin-left: 10px; color: var(--muted-foreground); font-size: 0.8rem;">Already added</span>`;
-                    }
-                    playlistOptions.appendChild(playlistItem);
-                });
-            }
-
-            function toggleNewPlaylistInput() {
-                newPlaylistInput.style.display = newPlaylistCheck.checked ? 'block' : 'none';
-            }
-
-            function saveToPlaylist() {
-                if (newPlaylistCheck.checked && newPlaylistInput.value.trim()) {
-                    const newPlaylistName = newPlaylistInput.value.trim();
-                    const newPlaylist = {
-                        name: newPlaylistName,
-                        videos: [currentVideoToAdd]
-                    };
-                    userPlaylists.push(newPlaylist);
+                const playlist = userPlaylists.find(p => p.name === playlistName);
+                if (playlist) {
+                    playlist.videos = playlist.videos.filter(v => v.id !== videoId);
                     localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
-                    renderPlaylists();
+                    loadPlaylistVideos(playlistName);
+                    alert('Video removed from playlist!');
                 }
-                const checkboxes = document.querySelectorAll('.playlist-checkbox:not(#new-playlist-check)');
-                checkboxes.forEach(checkbox => {
-                    if (checkbox.checked && !checkbox.disabled) {
-                        const playlistName = checkbox.id.replace('playlist-', '');
-                        const playlist = userPlaylists.find(p => p.name === playlistName);
-                        if (playlist && !playlist.videos.some(v => v.id === currentVideoToAdd.id)) {
-                            playlist.videos.push(currentVideoToAdd);
-                        }
-                    }
-                });
-                localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
-                playlistModal.classList.remove('show');
-                newPlaylistCheck.checked = false;
-                newPlaylistInput.style.display = 'none';
-                newPlaylistInput.value = '';
-                alert('Video added to playlist(s)!');
-            }
-
-            function renderPlaylists() {
-                const existingPlaylists = playlistsSection.querySelectorAll('.sidebar-item:not(#create-playlist-btn)');
-                existingPlaylists.forEach(item => item.remove());
-                userPlaylists.forEach(playlist => {
-                    const playlistItem = document.createElement('div');
-                    playlistItem.className = 'sidebar-item';
-                    playlistItem.dataset.playlist = playlist.name;
-                    playlistItem.innerHTML = `
-                        <i class="fas fa-list-ul"></i>
-                        <span>${playlist.name}</span>
-                    `;
-                    playlistItem.addEventListener('click', () => window.location.href = `playlists.html?name=${encodeURIComponent(playlist.name)}`);
-                    playlistsSection.insertBefore(playlistItem, createPlaylistBtn);
-                });
             }
 
             function openLoginModal() {
@@ -1349,6 +973,11 @@
                     updateAuthUI();
                     loginModal.classList.remove('show');
                     alert(`Welcome back, ${user.name}!`);
+                    if (playlistName) {
+                        loadPlaylistVideos(playlistName);
+                    } else {
+                        loadPlaylists();
+                    }
                 } else {
                     alert('Invalid email or password.');
                 }
@@ -1383,6 +1012,11 @@
                 updateAuthUI();
                 signupModal.classList.remove('show');
                 alert(`Welcome to TrendTube, ${name}!`);
+                if (playlistName) {
+                    loadPlaylistVideos(playlistName);
+                } else {
+                    loadPlaylists();
+                }
             }
 
             function handleLogout() {
@@ -1395,6 +1029,7 @@
                     const existingPlaylists = playlistsSection.querySelectorAll('.sidebar-item:not(#create-playlist-btn)');
                     existingPlaylists.forEach(item => item.remove());
                     alert('You have been logged out.');
+                    showAuthRequiredModal();
                 }
             }
 
@@ -1403,23 +1038,34 @@
                     showAuthRequiredModal();
                     return;
                 }
-                const playlistName = prompt('Enter a name for your new playlist:');
-                if (playlistName && playlistName.trim()) {
+                const newPlaylistName = prompt('Enter a name for your new playlist:');
+                if (newPlaylistName && newPlaylistName.trim()) {
                     const newPlaylist = {
-                        name: playlistName.trim(),
+                        name: newPlaylistName.trim(),
                         videos: []
                     };
                     userPlaylists.push(newPlaylist);
                     localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
                     renderPlaylists();
-                    alert(`Playlist "${playlistName}" created!`);
+                    alert(`Playlist "${newPlaylistName}" created!`);
+                    loadPlaylists();
                 }
             }
 
-            function showError(message) {
-                errorElement.style.display = 'block';
-                errorElement.textContent = message;
-                loadingElement.style.display = 'none';
+            function renderPlaylists() {
+                const existingPlaylists = playlistsSection.querySelectorAll('.sidebar-item:not(#create-playlist-btn)');
+                existingPlaylists.forEach(item => item.remove());
+                userPlaylists.forEach(playlist => {
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = 'sidebar-item';
+                    playlistItem.dataset.playlist = playlist.name;
+                    playlistItem.innerHTML = `
+                        <i class="fas fa-list-ul"></i>
+                        <span>${playlist.name}</span>
+                    `;
+                    playlistItem.addEventListener('click', () => window.location.href = `playlists.html?name=${encodeURIComponent(playlist.name)}`);
+                    playlistsSection.insertBefore(playlistItem, createPlaylistBtn);
+                });
             }
 
             initializePage();
