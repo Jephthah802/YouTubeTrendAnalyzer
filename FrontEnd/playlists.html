@@ -210,18 +210,34 @@
             height: 300px;
             overflow: hidden;
             border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .hero-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.6;
+        .hero-background {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            filter: blur(10px);
+            z-index: 1;
+            transform: scale(1.1);
         }
         .hero-overlay {
             position: absolute;
             inset: 0;
             background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7));
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(2px);
+            z-index: 2;
+        }
+        .hero-image {
+            position: relative;
+            max-width: 70%;
+            max-height: 100%;
+            object-fit: contain;
+            z-index: 3;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
         .hero-content {
             position: absolute;
@@ -230,6 +246,7 @@
             transform: translate(-50%, -50%);
             text-align: center;
             color: white;
+            z-index: 4;
         }
         .hero-title {
             font-size: 2.5rem;
@@ -263,8 +280,13 @@
                 align-items: center;
             }
         }
+        .playlist-item {
+            position: relative;
+            width: 300px;
+        }
         .playlist-card {
-            width: 200px;
+            width: 300px;
+            height: 170px;
             background: hsl(var(--card), 0.5);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-md);
@@ -272,16 +294,48 @@
             transition: all 0.2s ease;
             overflow: hidden;
             position: relative;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            z-index: 2;
         }
         .playlist-card:hover {
             background: hsl(var(--card), 0.8);
             transform: translateY(-4px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .playlist-background {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            background: var(--gradient-glass);
+            filter: blur(5px);
+            z-index: -1;
+        }
+        .playlist-stack::before,
+        .playlist-stack::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: hsl(var(--card), 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            z-index: 0;
+        }
+        .playlist-stack::before {
+            transform: translate(8px, 8px);
+            z-index: 1;
+        }
+        .playlist-stack::after {
+            transform: translate(16px, 16px);
+            z-index: 0;
+            opacity: 0.8;
         }
         .playlist-thumbnail {
             position: relative;
-            width: 200px;
-            height: 200px;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
         }
         .playlist-thumbnail img {
@@ -301,19 +355,20 @@
             justify-content: center;
         }
         .playlist-overlay svg {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             fill: white;
         }
         .playlist-info {
-            padding: var(--spacing-md);
+            padding: var(--spacing-sm) 0;
             display: flex;
             flex-direction: column;
             gap: var(--spacing-xs);
+            text-align: left;
         }
         .playlist-name {
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 1.1rem;
             color: var(--foreground);
             transition: color 0.2s ease;
             display: -webkit-box;
@@ -325,7 +380,7 @@
             color: var(--youtube-red);
         }
         .playlist-count {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             color: var(--muted-foreground);
         }
         .video-card {
@@ -384,7 +439,6 @@
             color: var(--foreground);
             transition: color 0.2s ease;
             display: -webkit-box;
-            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             min-height: 2.6rem;
@@ -590,6 +644,9 @@
             .hero-title {
                 font-size: 1.5rem;
             }
+            .hero-image {
+                max-width: 80%;
+            }
             .theme-toggle {
                 right: var(--spacing-md);
             }
@@ -702,6 +759,7 @@
     <div class="min-h-screen">
         <div class="container">
             <section class="hero-section" id="hero-section">
+                <div class="hero-background"></div>
                 <div class="hero-overlay"></div>
                 <img src="https://via.placeholder.com/1200x300?text=Playlists" alt="Playlist Banner" class="hero-image">
                 <div class="hero-content">
@@ -988,6 +1046,7 @@
                         fallbackElement.style.display = 'block';
                         fallbackElement.textContent = 'No playlists found. Create a new playlist to get started!';
                         heroImage.src = 'https://via.placeholder.com/1200x300?text=Playlists';
+                        heroSection.querySelector('.hero-background').style.backgroundImage = `url('https://via.placeholder.com/1200x300?text=Playlists')`;
                         heroTitle.textContent = 'Playlists';
                         setRandomOverlayColor();
                         loadingElement.style.display = 'none';
@@ -998,6 +1057,7 @@
                     const lastVideo = lastPlaylist && lastPlaylist.videos[lastPlaylist.videos.length - 1];
                     const thumbnail = lastVideo ? lastVideo.thumbnail : 'https://via.placeholder.com/1200x300?text=Playlists';
                     heroImage.src = thumbnail;
+                    heroSection.querySelector('.hero-background').style.backgroundImage = `url('${thumbnail}')`;
                     heroTitle.textContent = 'Playlists';
                     setRandomOverlayColor();
                 } catch (error) {
@@ -1011,14 +1071,17 @@
             function displayPlaylists(playlists) {
                 playlists.forEach(playlist => {
                     const lastVideo = playlist.videos[playlist.videos.length - 1];
-                    const thumbnail = lastVideo ? lastVideo.thumbnail : 'https://via.placeholder.com/200x200?text=No+Videos';
-                    const playlistCard = document.createElement('div');
-                    playlistCard.className = 'playlist-card';
-                    playlistCard.innerHTML = `
-                        <div class="playlist-thumbnail">
-                            <img src="${thumbnail}" alt="${playlist.name}">
-                            <div class="playlist-overlay">
-                                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    const thumbnail = lastVideo ? lastVideo.thumbnail : 'https://via.placeholder.com/300x170?text=No+Videos';
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = 'playlist-item';
+                    playlistItem.innerHTML = `
+                        <div class="playlist-card playlist-stack">
+                            <div class="playlist-background"></div>
+                            <div class="playlist-thumbnail">
+                                <img src="${thumbnail}" alt="${playlist.name}">
+                                <div class="playlist-overlay">
+                                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                </div>
                             </div>
                         </div>
                         <div class="playlist-info">
@@ -1026,10 +1089,10 @@
                             <div class="playlist-count">${playlist.videos.length} video${playlist.videos.length !== 1 ? 's' : ''}</div>
                         </div>
                     `;
-                    playlistCard.addEventListener('click', () => {
+                    playlistItem.addEventListener('click', () => {
                         window.location.href = `playlists.html?name=${encodeURIComponent(playlist.name)}`;
                     });
-                    playlistsContainer.appendChild(playlistCard);
+                    playlistsContainer.appendChild(playlistItem);
                 });
             }
 
@@ -1052,6 +1115,7 @@
                         fallbackElement.style.display = 'block';
                         fallbackElement.textContent = 'No videos in this playlist.';
                         heroImage.src = 'https://via.placeholder.com/1200x300?text=' + encodeURIComponent(playlistName);
+                        heroSection.querySelector('.hero-background').style.backgroundImage = `url('https://via.placeholder.com/1200x300?text=${encodeURIComponent(playlistName)}')`;
                         heroTitle.textContent = playlistName;
                         setRandomOverlayColor();
                         loadingElement.style.display = 'none';
@@ -1059,7 +1123,9 @@
                     }
                     displayPlaylistVideos(playlist.videos);
                     const lastVideo = playlist.videos[playlist.videos.length - 1];
-                    heroImage.src = lastVideo ? lastVideo.thumbnail : 'https://via.placeholder.com/1200x300?text=' + encodeURIComponent(playlistName);
+                    const thumbnail = lastVideo ? lastVideo.thumbnail : 'https://via.placeholder.com/1200x300?text=' + encodeURIComponent(playlistName);
+                    heroImage.src = thumbnail;
+                    heroSection.querySelector('.hero-background').style.backgroundImage = `url('${thumbnail}')`;
                     heroTitle.textContent = playlistName;
                     setRandomOverlayColor();
                 } catch (error) {
