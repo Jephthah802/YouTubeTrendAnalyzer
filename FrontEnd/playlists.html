@@ -517,7 +517,7 @@
             background: var(--background);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-md);
-            max-width: 400px;
+            max-width: 600px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -612,6 +612,28 @@
         .error {
             color: var(--youtube-red);
         }
+        .search-bar {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+        .search-bar input {
+            flex: 1;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--input);
+            color: var(--foreground);
+        }
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--youtube-red);
+        }
+        .search-results {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-lg);
+        }
         @media (min-width: 992px) {
             body {
                 padding-left: var(--sidebar-width);
@@ -702,6 +724,26 @@
         .dark .sidebar::-webkit-scrollbar-thumb:hover {
             background-color: hsl(0, 0%, 40%);
         }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+        .form-group label {
+            font-size: 0.9rem;
+            color: var(--foreground);
+        }
+        .form-group input, .form-group select {
+            padding: var(--spacing-sm);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--input);
+            color: var(--foreground);
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--youtube-red);
+        }
     </style>
 </head>
 <body class="dark">
@@ -767,6 +809,10 @@
                 </div>
             </section>
             <section class="playlists-section">
+                <div class="search-bar" id="search-bar" style="display: none;">
+                    <input type="text" id="video-search" placeholder="Search for videos to add...">
+                    <button class="btn btn-primary" id="search-videos-btn">Search</button>
+                </div>
                 <h2 class="section-title" id="section-title">Your Playlists</h2>
                 <div class="loading" id="loading">
                     <i class="fas fa-spinner"></i> Loading playlists...
@@ -774,6 +820,7 @@
                 <div class="error" id="error" style="display: none;"></div>
                 <div class="fallback" id="fallback" style="display: none;"></div>
                 <div class="playlists-grid" id="playlists-container"></div>
+                <div class="search-results" id="search-results" style="display: none;"></div>
             </section>
             <section class="videos-section">
                 <div class="videos-grid" id="videos-container" style="display: none;"></div>
@@ -788,14 +835,14 @@
                 <button class="close-modal"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <p>Login to view your playlists.</p>
+                <p>Login to view and manage your playlists.</p>
                 <div class="form-group">
                     <label for="login-email">Email</label>
-                    <input type="email" id="login-email" required>
+                    <input type="email" id="login-email" placeholder="Enter your email" required>
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password</label>
-                    <input type="password" id="login-password" required>
+                    <input type="password" id="login-password" placeholder="Enter your password" required>
                 </div>
             </div>
             <div class="modal-footer">
@@ -812,22 +859,22 @@
                 <button class="close-modal"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <p>Sign up to save videos to your favorites and create playlists.</p>
+                <p>Sign up to save videos to playlists.</p>
                 <div class="form-group">
                     <label for="signup-name">Full Name</label>
-                    <input type="text" id="signup-name" required>
+                    <input type="text" id="signup-name" placeholder="Enter your name" required>
                 </div>
                 <div class="form-group">
                     <label for="signup-email">Email</label>
-                    <input type="email" id="signup-email" required>
+                    <input type="email" id="signup-email" placeholder="Enter your email" required>
                 </div>
                 <div class="form-group">
                     <label for="signup-password">Password</label>
-                    <input type="password" id="signup-password" required>
+                    <input type="password" id="signup-password" placeholder="Enter your password" required>
                 </div>
                 <div class="form-group">
                     <label for="signup-confirm">Confirm Password</label>
-                    <input type="password" id="signup-confirm" required>
+                    <input type="password" id="signup-confirm" placeholder="Confirm your password" required>
                 </div>
             </div>
             <div class="modal-footer">
@@ -844,7 +891,7 @@
                 <button class="close-modal"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <p>You need to be logged in to view your playlists.</p>
+                <p>You need to be logged in to view and manage playlists.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="close-auth-required">Cancel</button>
@@ -852,11 +899,38 @@
             </div>
         </div>
     </div>
+    <div class="modal" id="add-to-playlist-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add to Playlist</h3>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Select a playlist to add the video to:</p>
+                <div class="form-group">
+                    <label for="playlist-select">Playlist</label>
+                    <select id="playlist-select">
+                        <option value="">Select a playlist</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="close-add-to-playlist">Cancel</button>
+                <button class="btn btn-primary" id="submit-add-to-playlist">Add</button>
+            </div>
+        </div>
+    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const API_URL = 'http://localhost:5000/api'; // Update to your backend URL
             const themeToggle = document.getElementById('theme-toggle');
             const playlistsContainer = document.getElementById('playlists-container');
             const videosContainer = document.getElementById('videos-container');
+            const searchResults = document.getElementById('search-results');
+            const searchBar = document.getElementById('search-bar');
+            const videoSearch = document.getElementById('video-search');
+            const searchVideosBtn = document.getElementById('search-videos-btn');
             const sectionTitle = document.getElementById('section-title');
             const loadingElement = document.getElementById('loading');
             const errorElement = document.getElementById('error');
@@ -874,6 +948,7 @@
             const loginModal = document.getElementById('login-modal');
             const signupModal = document.getElementById('signup-modal');
             const authRequiredModal = document.getElementById('auth-required-modal');
+            const addToPlaylistModal = document.getElementById('add-to-playlist-modal');
             const closeModalButtons = document.querySelectorAll('.close-modal');
             const closeLoginBtn = document.getElementById('close-login');
             const submitLoginBtn = document.getElementById('submit-login');
@@ -881,10 +956,13 @@
             const submitSignupBtn = document.getElementById('submit-signup');
             const closeAuthRequiredBtn = document.getElementById('close-auth-required');
             const goToLoginBtn = document.getElementById('go-to-login');
+            const closeAddToPlaylistBtn = document.getElementById('close-add-to-playlist');
+            const submitAddToPlaylistBtn = document.getElementById('submit-add-to-playlist');
             const playlistsSection = document.getElementById('playlists-section');
             const authSection = document.getElementById('auth-section');
             const heroSection = document.getElementById('hero-section');
             const heroImage = heroSection.querySelector('.hero-image');
+            const heroBackground = heroSection.querySelector('.hero-background');
             const heroOverlay = heroSection.querySelector('.hero-overlay');
             const heroTitle = heroSection.querySelector('.hero-title');
 
@@ -893,17 +971,18 @@
             let currentUser = null;
             let userPlaylists = [];
             let selectedPlaylist = null;
+            let selectedVideoId = null;
 
             const urlParams = new URLSearchParams(window.location.search);
             const playlistName = urlParams.get('name');
 
             const overlayColors = [
-                'linear-gradient(to bottom, rgba(255, 0, 0, 0.4), rgba(0, 0, 0, 0.7))', // Red
-                'linear-gradient(to bottom, rgba(0, 128, 255, 0.4), rgba(0, 0, 0, 0.7))', // Blue
-                'linear-gradient(to bottom, rgba(0, 255, 128, 0.4), rgba(0, 0, 0, 0.7))', // Green
-                'linear-gradient(to bottom, rgba(255, 165, 0, 0.4), rgba(0, 0, 0, 0.7))', // Orange
-                'linear-gradient(to bottom, rgba(128, 0, 255, 0.4), rgba(0, 0, 0, 0.7))', // Purple
-                'linear-gradient(to bottom, rgba(255, 192, 203, 0.4), rgba(0, 0, 0, 0.7))' // Pink
+                'linear-gradient(to bottom, rgba(255, 0, 0, 0.4), rgba(0, 0, 0, 0.7))',
+                'linear-gradient(to bottom, rgba(0, 128, 255, 0.4), rgba(0, 0, 0, 0.7))',
+                'linear-gradient(to bottom, rgba(0, 255, 128, 0.4), rgba(0, 0, 0, 0.7))',
+                'linear-gradient(to bottom, rgba(255, 165, 0, 0.4), rgba(0, 0, 0, 0.7))',
+                'linear-gradient(to bottom, rgba(128, 0, 255, 0.4), rgba(0, 0, 0, 0.7))',
+                'linear-gradient(to bottom, rgba(255, 192, 203, 0.4), rgba(0, 0, 0, 0.7))'
             ];
 
             function setRandomOverlayColor() {
@@ -911,26 +990,32 @@
                 heroOverlay.style.background = overlayColors[randomIndex];
             }
 
-            function initializePage() {
-                checkLoginStatus();
+            async function initializePage() {
+                await checkLoginStatus();
                 setRandomOverlayColor();
                 themeToggle.addEventListener('click', toggleTheme);
                 sidebarToggle.addEventListener('click', toggleSidebar);
                 closeSidebar.addEventListener('click', toggleSidebar);
                 overlay.addEventListener('click', toggleSidebar);
-                homeBtn.addEventListener('click', () => window.location.href = 'index2.html');
+                homeBtn.addEventListener('click', () => window.location.href = 'index.html');
                 favoritesBtn.addEventListener('click', () => window.location.href = 'favorites.html');
                 playlistsBtn.addEventListener('click', () => window.location.href = 'playlists.html');
                 createPlaylistBtn.addEventListener('click', createNewPlaylist);
                 closeModalButtons.forEach(btn => btn.addEventListener('click', closeAllModals));
-                closeLoginBtn.addEventListener('click', () => loginModal.style.display = 'none');
+                closeLoginBtn.addEventListener('click', () => loginModal.classList.remove('show'));
                 submitLoginBtn.addEventListener('click', handleLogin);
-                closeSignupBtn.addEventListener('click', () => signupModal.style.display = 'none');
+                closeSignupBtn.addEventListener('click', () => signupModal.classList.remove('show'));
                 submitSignupBtn.addEventListener('click', handleSignup);
-                closeAuthRequiredBtn.addEventListener('click', () => authRequiredModal.style.display = 'none');
+                closeAuthRequiredBtn.addEventListener('click', () => authRequiredModal.classList.remove('show'));
                 goToLoginBtn.addEventListener('click', () => {
-                    authRequiredModal.style.display = 'none';
+                    authRequiredModal.classList.remove('show');
                     openLoginModal();
+                });
+                closeAddToPlaylistBtn.addEventListener('click', () => addToPlaylistModal.classList.remove('show'));
+                submitAddToPlaylistBtn.addEventListener('click', handleAddToPlaylist);
+                searchVideosBtn.addEventListener('click', searchVideos);
+                videoSearch.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') searchVideos();
                 });
 
                 document.addEventListener('click', function(e) {
@@ -953,24 +1038,41 @@
                 }
 
                 if (playlistName) {
-                    loadPlaylistVideos(playlistName);
+                    await loadPlaylistVideos(playlistName);
                 } else {
-                    loadPlaylists();
+                    await loadPlaylists();
                 }
             }
 
-            function checkLoginStatus() {
-                const userData = localStorage.getItem('currentUser');
-                if (userData) {
-                    currentUser = JSON.parse(userData);
-                    isLoggedIn = true;
-                    updateAuthUI();
+            async function checkLoginStatus() {
+                const token = localStorage.getItem('token');
+                if (token) {
                     try {
-                        userPlaylists = JSON.parse(localStorage.getItem(`playlists_${currentUser.email}`)) || [];
-                        renderPlaylists();
+                        const response = await fetch(`${API_URL}/auth/me`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (response.ok) {
+                            currentUser = await response.json();
+                            isLoggedIn = true;
+                            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                            updateAuthUI();
+                            await fetchPlaylists();
+                            searchBar.style.display = 'flex';
+                        } else {
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('currentUser');
+                            isLoggedIn = false;
+                            updateAuthUI();
+                            showAuthRequiredModal();
+                        }
                     } catch (error) {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('currentUser');
+                        isLoggedIn = false;
+                        updateAuthUI();
+                        showAuthRequiredModal();
                         errorElement.style.display = 'block';
-                        errorElement.textContent = `Error loading playlists: ${error.message}`;
+                        errorElement.textContent = 'Failed to verify login status. Please try again.';
                     }
                 } else {
                     showAuthRequiredModal();
@@ -1027,7 +1129,7 @@
                     </svg>`;
             }
 
-            function loadPlaylists() {
+            async function loadPlaylists() {
                 if (!isLoggedIn) {
                     showAuthRequiredModal();
                     return;
@@ -1037,16 +1139,25 @@
                 fallbackElement.style.display = 'none';
                 playlistsContainer.style.display = 'flex';
                 videosContainer.style.display = 'none';
+                searchResults.style.display = 'none';
                 sectionTitle.textContent = 'Your Playlists';
                 playlistsContainer.innerHTML = '';
+                heroSection.style.display = 'block';
 
                 try {
-                    userPlaylists = JSON.parse(localStorage.getItem(`playlists_${currentUser.email}`)) || [];
+                    const response = await fetch(`${API_URL}/playlists`, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to fetch playlists');
+                    }
+                    userPlaylists = await response.json();
                     if (userPlaylists.length === 0) {
                         fallbackElement.style.display = 'block';
                         fallbackElement.textContent = 'No playlists found. Create a new playlist to get started!';
                         heroImage.src = 'https://via.placeholder.com/1200x300?text=Playlists';
-                        heroSection.querySelector('.hero-background').style.backgroundImage = `url('https://via.placeholder.com/1200x300?text=Playlists')`;
+                        heroBackground.style.backgroundImage = `url('https://via.placeholder.com/1200x300?text=Playlists')`;
                         heroTitle.textContent = 'Playlists';
                         setRandomOverlayColor();
                         loadingElement.style.display = 'none';
@@ -1054,10 +1165,10 @@
                     }
                     displayPlaylists(userPlaylists);
                     const lastPlaylist = userPlaylists[userPlaylists.length - 1];
-                    const lastVideo = lastPlaylist && lastPlaylist.videos[lastPlaylist.videos.length - 1];
+                    const lastVideo = lastPlaylist.videos && lastPlaylist.videos.length > 0 ? lastPlaylist.videos[lastPlaylist.videos.length - 1] : null;
                     const thumbnail = lastVideo ? lastVideo.thumbnail : 'https://via.placeholder.com/1200x300?text=Playlists';
                     heroImage.src = thumbnail;
-                    heroSection.querySelector('.hero-background').style.backgroundImage = `url('${thumbnail}')`;
+                    heroBackground.style.backgroundImage = `url('${thumbnail}')`;
                     heroTitle.textContent = 'Playlists';
                     setRandomOverlayColor();
                 } catch (error) {
@@ -1069,8 +1180,9 @@
             }
 
             function displayPlaylists(playlists) {
+                playlistsContainer.innerHTML = '';
                 playlists.forEach(playlist => {
-                    const lastVideo = playlist.videos[playlist.videos.length - 1];
+                    const lastVideo = playlist.videos && playlist.videos.length > 0 ? playlist.videos[playlist.videos.length - 1] : null;
                     const thumbnail = lastVideo ? lastVideo.thumbnail : 'https://via.placeholder.com/300x170?text=No+Videos';
                     const playlistItem = document.createElement('div');
                     playlistItem.className = 'playlist-item';
@@ -1086,7 +1198,7 @@
                         </div>
                         <div class="playlist-info">
                             <h3 class="playlist-name">${playlist.name}</h3>
-                            <div class="playlist-count">${playlist.videos.length} video${playlist.videos.length !== 1 ? 's' : ''}</div>
+                            <div class="playlist-count">${playlist.videos ? playlist.videos.length : 0} video${(playlist.videos ? playlist.videos.length : 0) !== 1 ? 's' : ''}</div>
                         </div>
                     `;
                     playlistItem.addEventListener('click', () => {
@@ -1096,7 +1208,7 @@
                 });
             }
 
-            function loadPlaylistVideos(playlistName) {
+            async function loadPlaylistVideos(playlistName) {
                 if (!isLoggedIn) {
                     showAuthRequiredModal();
                     return;
@@ -1106,16 +1218,26 @@
                 fallbackElement.style.display = 'none';
                 playlistsContainer.style.display = 'none';
                 videosContainer.style.display = 'flex';
+                searchResults.style.display = 'none';
                 sectionTitle.textContent = `Playlist: ${playlistName}`;
                 videosContainer.innerHTML = '';
+                heroSection.style.display = 'block';
 
                 try {
-                    const playlist = userPlaylists.find(p => p.name === playlistName);
-                    if (!playlist || playlist.videos.length === 0) {
+                    const response = await fetch(`${API_URL}/playlists?name=${encodeURIComponent(playlistName)}`, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to fetch playlist videos');
+                    }
+                    const playlist = await response.json();
+                    selectedPlaylist = playlist;
+                    if (!playlist || !playlist.videos || playlist.videos.length === 0) {
                         fallbackElement.style.display = 'block';
                         fallbackElement.textContent = 'No videos in this playlist.';
-                        heroImage.src = 'https://via.placeholder.com/1200x300?text=' + encodeURIComponent(playlistName);
-                        heroSection.querySelector('.hero-background').style.backgroundImage = `url('https://via.placeholder.com/1200x300?text=${encodeURIComponent(playlistName)}')`;
+                        heroImage.src = `https://via.placeholder.com/1200x300?text=${encodeURIComponent(playlistName)}`;
+                        heroBackground.style.backgroundImage = `url('https://via.placeholder.com/1200x300?text=${encodeURIComponent(playlistName)}')`;
                         heroTitle.textContent = playlistName;
                         setRandomOverlayColor();
                         loadingElement.style.display = 'none';
@@ -1123,9 +1245,9 @@
                     }
                     displayPlaylistVideos(playlist.videos);
                     const lastVideo = playlist.videos[playlist.videos.length - 1];
-                    const thumbnail = lastVideo ? lastVideo.thumbnail : 'https://via.placeholder.com/1200x300?text=' + encodeURIComponent(playlistName);
+                    const thumbnail = lastVideo ? lastVideo.thumbnail : `https://via.placeholder.com/1200x300?text=${encodeURIComponent(playlistName)}`;
                     heroImage.src = thumbnail;
-                    heroSection.querySelector('.hero-background').style.backgroundImage = `url('${thumbnail}')`;
+                    heroBackground.style.backgroundImage = `url('${thumbnail}')`;
                     heroTitle.textContent = playlistName;
                     setRandomOverlayColor();
                 } catch (error) {
@@ -1137,6 +1259,7 @@
             }
 
             function displayPlaylistVideos(videos) {
+                videosContainer.innerHTML = '';
                 videos.forEach(video => {
                     const videoCard = document.createElement('div');
                     videoCard.className = 'video-card';
@@ -1170,24 +1293,279 @@
                 });
             }
 
-            function removeFromPlaylist(videoId, playlistName) {
+            async function searchVideos() {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                const query = videoSearch.value.trim();
+                if (!query) {
+                    alert('Please enter a search query.');
+                    return;
+                }
+                loadingElement.style.display = 'block';
+                errorElement.style.display = 'none';
+                fallbackElement.style.display = 'none';
+                playlistsContainer.style.display = 'none';
+                videosContainer.style.display = 'none';
+                searchResults.style.display = 'flex';
+                sectionTitle.textContent = `Search Results for "${query}"`;
+                searchResults.innerHTML = '';
+
+                try {
+                    const response = await fetch(`${API_URL}/videos/search?q=${encodeURIComponent(query)}`, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to search videos');
+                    }
+                    const videos = await response.json();
+                    if (videos.length === 0) {
+                        fallbackElement.style.display = 'block';
+                        fallbackElement.textContent = 'No videos found for your search.';
+                        loadingElement.style.display = 'none';
+                        return;
+                    }
+                    displaySearchResults(videos);
+                } catch (error) {
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = `Error searching videos: ${error.message}`;
+                } finally {
+                    loadingElement.style.display = 'none';
+                }
+            }
+
+            function displaySearchResults(videos) {
+                searchResults.innerHTML = '';
+                videos.forEach(video => {
+                    const videoCard = document.createElement('div');
+                    videoCard.className = 'video-card';
+                    videoCard.innerHTML = `
+                        <div class="thumbnail">
+                            <img src="${video.thumbnail}" alt="${video.title}">
+                            <div class="duration"><svg class="duration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${video.duration}</div>
+                        </div>
+                        <div class="video-info">
+                            <h3 class="video-title">${video.title}</h3>
+                            <div class="channel">${video.channel}</div>
+                            <div class="stats">
+                                <span class="stat-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${video.views}</span>
+                                <span class="stat-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${video.likes}</span>
+                            </div>
+                        </div>
+                        <div class="video-actions">
+                            <button class="action-btn add-to-playlist-btn" data-video-id="${video.id}" title="Add to Playlist">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M12 7v10M7 12h10"/></svg>
+                            </button>
+                        </div>
+                    `;
+                    videoCard.addEventListener('click', (e) => {
+                        if (!e.target.closest('.action-btn')) {
+                            window.open(video.embedUrl, '_blank');
+                        }
+                    });
+                    const addBtn = videoCard.querySelector('.add-to-playlist-btn');
+                    addBtn.addEventListener('click', () => openAddToPlaylistModal(video.id));
+                    searchResults.appendChild(videoCard);
+                });
+            }
+
+            async function removeFromPlaylist(videoId, playlistName) {
                 if (!isLoggedIn) {
                     showAuthRequiredModal();
                     return;
                 }
                 try {
-                    const playlist = userPlaylists.find(p => p.name === playlistName);
-                    if (playlist) {
-                        playlist.videos = playlist.videos.filter(v => v.id !== videoId);
-                        playlist.lastUpdated = new Date().toISOString();
-                        localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
-                        loadPlaylistVideos(playlistName);
-                        renderPlaylists();
-                        alert('Video removed from playlist!');
+                    const response = await fetch(`${API_URL}/playlists`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        },
+                        body: JSON.stringify({ name: playlistName, videoId }),
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to remove video from playlist');
                     }
+                    await loadPlaylistVideos(playlistName);
+                    await fetchPlaylists();
+                    alert('Video removed from playlist!');
                 } catch (error) {
                     errorElement.style.display = 'block';
                     errorElement.textContent = `Error removing video: ${error.message}`;
+                }
+            }
+
+            async function fetchPlaylists() {
+                if (!isLoggedIn) return;
+                try {
+                    const response = await fetch(`${API_URL}/playlists`, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to fetch playlists');
+                    }
+                    userPlaylists = await response.json();
+                    renderPlaylists();
+                } catch (error) {
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = `Error fetching playlists: ${error.message}`;
+                }
+            }
+
+            function renderPlaylists() {
+                const existingPlaylists = playlistsSection.querySelectorAll('.sidebar-item:not(#create-playlist-btn)');
+                existingPlaylists.forEach(item => item.remove());
+                userPlaylists.forEach(playlist => {
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = 'sidebar-item';
+                    playlistItem.innerHTML = `
+                        <i class="fas fa-list"></i>
+                        <span>${playlist.name}</span>
+                    `;
+                    playlistItem.addEventListener('click', () => {
+                        window.location.href = `playlists.html?name=${encodeURIComponent(playlist.name)}`;
+                    });
+                    playlistItem.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        const menu = document.createElement('div');
+                        menu.style.position = 'absolute';
+                        menu.style.background = 'var(--card)';
+                        menu.style.border = '1px solid var(--border)';
+                        menu.style.borderRadius = 'var(--radius-sm)';
+                        menu.style.padding = 'var(--spacing-sm)';
+                        menu.style.zIndex = '1000';
+                        menu.innerHTML = `
+                            <div class="context-item" style="padding: var(--spacing-sm); cursor: pointer;">Rename</div>
+                            <div class="context-item" style="padding: var(--spacing-sm); cursor: pointer;">Delete</div>
+                        `;
+                        menu.style.top = `${e.clientY}px`;
+                        menu.style.left = `${e.clientX}px`;
+                        document.body.appendChild(menu);
+
+                        const renameBtn = menu.querySelectorAll('.context-item')[0];
+                        const deleteBtn = menu.querySelectorAll('.context-item')[1];
+                        renameBtn.addEventListener('click', () => {
+                            renamePlaylist(playlist.name);
+                            menu.remove();
+                        });
+                        deleteBtn.addEventListener('click', () => {
+                            deletePlaylist(playlist.name);
+                            menu.remove();
+                        });
+
+                        document.addEventListener('click', function removeMenu() {
+                            menu.remove();
+                            document.removeEventListener('click', removeMenu);
+                        }, { once: true });
+                    });
+                    playlistsSection.insertBefore(playlistItem, createPlaylistBtn);
+                });
+            }
+
+            async function createNewPlaylist() {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                const playlistName = prompt('Enter a name for your new playlist:');
+                if (playlistName && playlistName.trim()) {
+                    try {
+                        const response = await fetch(`${API_URL}/playlists`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                            },
+                            body: JSON.stringify({ name: playlistName.trim() }),
+                        });
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Failed to create playlist');
+                        }
+                        const newPlaylist = await response.json();
+                        userPlaylists.push(newPlaylist);
+                        await fetchPlaylists();
+                        alert(`Playlist "${playlistName}" created!`);
+                        if (!urlParams.get('name')) {
+                            await loadPlaylists();
+                        }
+                    } catch (error) {
+                        errorElement.style.display = 'block';
+                        errorElement.textContent = `Error creating playlist: ${error.message}`;
+                    }
+                }
+            }
+
+            async function renamePlaylist(oldName) {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                const newName = prompt('Enter new playlist name:', oldName);
+                if (newName && newName.trim() && newName.trim() !== oldName) {
+                    try {
+                        const response = await fetch(`${API_URL}/playlists`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                            },
+                            body: JSON.stringify({ oldName, newName: newName.trim() }),
+                        });
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Failed to rename playlist');
+                        }
+                        const updatedPlaylist = await response.json();
+                        const index = userPlaylists.findIndex(p => p.name === oldName);
+                        if (index !== -1) {
+                            userPlaylists[index] = updatedPlaylist;
+                        }
+                        await fetchPlaylists();
+                        alert(`Playlist renamed to "${newName.trim()}"`);
+                        if (urlParams.get('name') === oldName) {
+                            window.location.href = `playlists.html?name=${encodeURIComponent(newName.trim())}`;
+                        }
+                    } catch (error) {
+                        errorElement.style.display = 'block';
+                        errorElement.textContent = `Error renaming playlist: ${error.message}`;
+                    }
+                }
+            }
+
+            async function deletePlaylist(playlistName) {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                if (confirm(`Are you sure you want to delete the playlist "${playlistName}"?`)) {
+                    try {
+                        const response = await fetch(`${API_URL}/playlists`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                            },
+                            body: JSON.stringify({ name: playlistName }),
+                        });
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Failed to delete playlist');
+                        }
+                        userPlaylists = userPlaylists.filter(p => p.name !== playlistName);
+                        await fetchPlaylists();
+                        alert(`Playlist "${playlistName}" deleted`);
+                        if (urlParams.get('name') === playlistName) {
+                            window.location.href = 'playlists.html';
+                        }
+                    } catch (error) {
+                        errorElement.style.display = 'block';
+                        errorElement.textContent = `Error deleting playlist: ${error.message}`;
+                    }
                 }
             }
 
@@ -1203,7 +1581,57 @@
                 authRequiredModal.classList.add('show');
                 playlistsContainer.style.display = 'none';
                 videosContainer.style.display = 'none';
+                searchResults.style.display = 'none';
+                searchBar.style.display = 'none';
                 heroSection.style.display = 'none';
+            }
+
+            function openAddToPlaylistModal(videoId) {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                selectedVideoId = videoId;
+                const playlistSelect = document.getElementById('playlist-select');
+                playlistSelect.innerHTML = '<option value="">Select a playlist</option>';
+                userPlaylists.forEach(playlist => {
+                    const option = document.createElement('option');
+                    option.value = playlist.name;
+                    option.textContent = playlist.name;
+                    playlistSelect.appendChild(option);
+                });
+                addToPlaylistModal.classList.add('show');
+            }
+
+            async function handleAddToPlaylist() {
+                const playlistName = document.getElementById('playlist-select').value;
+                if (!playlistName) {
+                    alert('Please select a playlist.');
+                    return;
+                }
+                try {
+                    const response = await fetch(`${API_URL}/playlists/add`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        },
+                        body: JSON.stringify({ name: playlistName, videoId: selectedVideoId }),
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to add video to playlist');
+                    }
+                    addToPlaylistModal.classList.remove('show');
+                    alert('Video added to playlist!');
+                    if (urlParams.get('name') === playlistName) {
+                        await loadPlaylistVideos(playlistName);
+                    }
+                    await fetchPlaylists();
+                } catch (error) {
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = `Error adding video to playlist: ${error.message}`;
+                }
             }
 
             function closeAllModals() {
@@ -1212,47 +1640,50 @@
                 });
             }
 
-            function handleLogin() {
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
+            async function handleLogin() {
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value.trim();
                 if (!email || !password) {
                     alert('Please enter both email and password.');
                     return;
                 }
                 try {
-                    const users = JSON.parse(localStorage.getItem('users')) || [];
-                    const user = users.find(u => u.email === email && u.password === password);
-                    if (user) {
-                        currentUser = { name: user.name, email: user.email };
-                        isLoggedIn = true;
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                        const playlists = localStorage.getItem(`playlists_${currentUser.email}`);
-                        if (playlists) {
-                            userPlaylists = JSON.parse(playlists);
-                            renderPlaylists();
-                        }
-                        updateAuthUI();
-                        loginModal.classList.remove('show');
-                        alert(`Welcome back, ${user.name}!`);
-                        heroSection.style.display = 'block';
-                        if (playlistName) {
-                            loadPlaylistVideos(playlistName);
-                        } else {
-                            loadPlaylists();
-                        }
+                    const response = await fetch(`${API_URL}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password }),
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Invalid email or password.');
+                    }
+                    const { token, user } = await response.json();
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    currentUser = user;
+                    isLoggedIn = true;
+                    updateAuthUI();
+                    await fetchPlaylists();
+                    loginModal.classList.remove('show');
+                    alert(`Welcome back, ${user.name}!`);
+                    searchBar.style.display = 'flex';
+                    heroSection.style.display = 'block';
+                    if (playlistName) {
+                        await loadPlaylistVideos(playlistName);
                     } else {
-                        alert('Invalid email or password.');
+                        await loadPlaylists();
                     }
                 } catch (error) {
-                    alert(`Error during login: ${error.message}`);
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = `Error during login: ${error.message}`;
                 }
             }
 
-            function handleSignup() {
-                const name = document.getElementById('signup-name').value;
-                const email = document.getElementById('signup-email').value;
-                const password = document.getElementById('signup-password').value;
-                const confirm = document.getElementById('signup-confirm').value;
+            async function handleSignup() {
+                const name = document.getElementById('signup-name').value.trim();
+                const email = document.getElementById('signup-email').value.trim();
+                const password = document.getElementById('signup-password').value.trim();
+                const confirm = document.getElementById('signup-confirm').value.trim();
                 if (!name || !email || !password || !confirm) {
                     alert('Please fill in all fields.');
                     return;
@@ -1262,35 +1693,40 @@
                     return;
                 }
                 try {
-                    const users = JSON.parse(localStorage.getItem('users')) || [];
-                    if (users.some(u => u.email === email)) {
-                        alert('An account with this email already exists.');
-                        return;
+                    const response = await fetch(`${API_URL}/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, password }),
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to sign up.');
                     }
-                    const newUser = { name, email, password };
-                    users.push(newUser);
-                    localStorage.setItem('users', JSON.stringify(users));
-                    currentUser = { name, email };
+                    const { token, user } = await response.json();
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    currentUser = user;
                     isLoggedIn = true;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    userPlaylists = [];
-                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
                     updateAuthUI();
+                    await fetchPlaylists();
                     signupModal.classList.remove('show');
                     alert(`Welcome to TrendTube, ${name}!`);
+                    searchBar.style.display = 'flex';
                     heroSection.style.display = 'block';
                     if (playlistName) {
-                        loadPlaylistVideos(playlistName);
+                        await loadPlaylistVideos(playlistName);
                     } else {
-                        loadPlaylists();
+                        await loadPlaylists();
                     }
                 } catch (error) {
-                    alert(`Error during signup: ${error.message}`);
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = `Error during signup: ${error.message}`;
                 }
             }
 
-            function handleLogout() {
+            async function handleLogout() {
                 if (confirm('Are you sure you want to logout?')) {
+                    localStorage.removeItem('token');
                     localStorage.removeItem('currentUser');
                     isLoggedIn = false;
                     currentUser = null;
@@ -1300,107 +1736,6 @@
                     existingPlaylists.forEach(item => item.remove());
                     alert('You have been logged out.');
                     showAuthRequiredModal();
-                }
-            }
-
-            function createNewPlaylist() {
-                if (!isLoggedIn) {
-                    showAuthRequiredModal();
-                    return;
-                }
-                const playlistName = prompt('Enter a name for your new playlist:');
-                if (playlistName && playlistName.trim()) {
-                    if (userPlaylists.some(p => p.name === playlistName.trim())) {
-                        alert('A playlist with this name already exists.');
-                        return;
-                    }
-                    const newPlaylist = {
-                        name: playlistName.trim(),
-                        videos: [],
-                        lastUpdated: new Date().toISOString()
-                    };
-                    userPlaylists.push(newPlaylist);
-                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
-                    renderPlaylists();
-                    alert(`Playlist "${playlistName}" created!`);
-                    loadPlaylists();
-                }
-            }
-
-            function renderPlaylists() {
-                const existingPlaylists = playlistsSection.querySelectorAll('.sidebar-item:not(#create-playlist-btn)');
-                existingPlaylists.forEach(item => item.remove());
-                userPlaylists.forEach(playlist => {
-                    const playlistItem = document.createElement('div');
-                    playlistItem.className = 'sidebar-item';
-                    playlistItem.dataset.playlist = playlist.name;
-                    playlistItem.innerHTML = `
-                        <i class="fas fa-list-ul"></i>
-                        <span>${playlist.name}</span>
-                        <div class="playlist-actions">
-                            <button class="playlist-action-btn rename-btn" data-playlist-name="${playlist.name}" title="Rename Playlist">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                </svg>
-                            </button>
-                            <button class="playlist-action-btn delete-btn" data-playlist-name="${playlist.name}" title="Delete Playlist">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M3 6h18M6 6v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6M10 11v6M14 11v6"/>
-                                </svg>
-                            </button>
-                        </div>
-                    `;
-                    playlistItem.addEventListener('click', (e) => {
-                        if (!e.target.closest('.playlist-action-btn')) {
-                            window.location.href = `playlists.html?name=${encodeURIComponent(playlist.name)}`;
-                        }
-                    });
-                    const renameBtn = playlistItem.querySelector('.rename-btn');
-                    renameBtn.addEventListener('click', () => renamePlaylist(playlist.name));
-                    const deleteBtn = playlistItem.querySelector('.delete-btn');
-                    deleteBtn.addEventListener('click', () => deletePlaylist(playlist.name));
-                    playlistsSection.insertBefore(playlistItem, createPlaylistBtn);
-                });
-            }
-
-            function renamePlaylist(oldName) {
-                if (!isLoggedIn) {
-                    showAuthRequiredModal();
-                    return;
-                }
-                const newName = prompt('Enter new playlist name:', oldName);
-                if (newName && newName.trim() && newName.trim() !== oldName) {
-                    if (userPlaylists.some(p => p.name === newName.trim())) {
-                        alert('A playlist with this name already exists.');
-                        return;
-                    }
-                    const playlist = userPlaylists.find(p => p.name === oldName);
-                    if (playlist) {
-                        playlist.name = newName.trim();
-                        playlist.lastUpdated = new Date().toISOString();
-                        localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
-                        renderPlaylists();
-                        alert(`Playlist renamed to "${newName.trim()}"`);
-                        if (urlParams.get('name') === oldName) {
-                            window.location.href = `playlists.html?name=${encodeURIComponent(newName.trim())}`;
-                        }
-                    }
-                }
-            }
-
-            function deletePlaylist(playlistName) {
-                if (!isLoggedIn) {
-                    showAuthRequiredModal();
-                    return;
-                }
-                if (confirm(`Are you sure you want to delete the playlist "${playlistName}"?`)) {
-                    userPlaylists = userPlaylists.filter(p => p.name !== playlistName);
-                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
-                    renderPlaylists();
-                    alert(`Playlist "${playlistName}" deleted`);
-                    if (urlParams.get('name') === playlistName) {
-                        window.location.href = 'playlists.html';
-                    }
                 }
             }
 
