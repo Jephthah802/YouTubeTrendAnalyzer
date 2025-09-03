@@ -37,12 +37,12 @@
         .dark {
             --background: hsl(0, 0%, 9%);
             --foreground: hsl(0, 0%, 95%);
-            --card: hsl(0, 0%, 9%);
+            --card: hsl(0, 0%, 12%);
             --card-foreground: hsl(0, 0%, 95%);
-            --muted: hsl(0, 0%, 15%);
-            --muted-foreground: hsl(0, 0%, 65%);
-            --border: hsl(0, 0%, 15%);
-            --input: hsl(0, 0%, 15%);
+            --muted: hsl(0, 0%, 20%);
+            --muted-foreground: hsl(0, 0%, 70%);
+            --border: hsl(0, 0%, 18%);
+            --input: hsl(0, 0%, 18%);
             --glass-bg: hsl(0, 0%, 100%, 0.05);
             --glass-border: hsl(0, 0%, 100%, 0.1);
             --gradient-glass: linear-gradient(145deg, hsl(0, 0%, 100%, 0.05), hsl(0, 0%, 100%, 0.02));
@@ -59,13 +59,14 @@
             line-height: 1.6;
             transition: background-color 0.3s ease, color 0.3s ease;
             display: flex;
+            overflow-x: hidden;
         }
         .min-h-screen {
             min-height: 100vh;
             flex: 1;
         }
         .container {
-            max-width: 1200px;
+            max-width: min(1200px, 100%);
             margin: 0 auto;
             padding: var(--spacing-md);
             display: flex;
@@ -80,7 +81,7 @@
             left: 0;
             top: 0;
             padding: var(--spacing-lg);
-            overflow-y: hidden;
+            overflow-y: auto;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             z-index: 100;
             transform: translateX(-100%);
@@ -161,8 +162,47 @@
             bottom: 0;
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 99;
+            pointer-events: none;
         }
         .overlay.show {
+            display: block;
+            pointer-events: auto;
+        }
+        .theme-toggle {
+            position: fixed;
+            top: var(--spacing-md);
+            right: var(--spacing-md);
+            width: 44px;
+            height: 44px;
+            border: 1px solid hsl(0, 0%, 100%, 0.2);
+            background: hsl(0, 0%, 0%, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-sm);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 101;
+        }
+        .theme-toggle:hover {
+            background: hsl(0, 0%, 100%, 0.2);
+        }
+        .theme-icon {
+            width: 20px;
+            height: 20px;
+        }
+        .dark .sun-icon {
+            display: block;
+        }
+        .dark .moon-icon {
+            display: none;
+        }
+        body:not(.dark) .sun-icon {
+            display: none;
+        }
+        body:not(.dark) .moon-icon {
             display: block;
         }
         .hero-banner {
@@ -216,43 +256,6 @@
                 font-size: 1.125rem;
             }
         }
-        .theme-toggle {
-            position: fixed;
-            top: var(--spacing-md);
-            right: var(--spacing-md);
-            width: 44px;
-            height: 44px;
-            border: 1px solid hsl(0, 0%, 100%, 0.2);
-            background: hsl(0, 0%, 0%, 0.2);
-            backdrop-filter: blur(10px);
-            border-radius: var(--radius-sm);
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 101;
-        }
-        .theme-toggle:hover {
-            background: hsl(0, 0%, 100%, 0.2);
-        }
-        .theme-icon {
-            width: 20px;
-            height: 20px;
-        }
-        .dark .sun-icon {
-            display: block;
-        }
-        .dark .moon-icon {
-            display: none;
-        }
-        body:not(.dark) .sun-icon {
-            display: none;
-        }
-        body:not(.dark) .moon-icon {
-            display: block;
-        }
         .search-controls {
             display: flex;
             flex-direction: column;
@@ -292,6 +295,14 @@
             transition: all 0.2s ease;
             font-size: 0.95rem;
             height: 48px;
+        }
+        select option {
+            color: black;
+            background: white;
+        }
+        .dark select option {
+            color: white;
+            background: var(--card);
         }
         select {
             padding-left: var(--spacing-md);
@@ -341,17 +352,23 @@
             border-color: var(--youtube-red);
             transform: translateY(-1px);
         }
+        .videos-section {
+            overflow-x: hidden;
+        }
         .videos-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: var(--spacing-lg);
         }
-        @media (min-width: 1024px) {
+        @media (max-width: 360px) {
             .videos-grid {
-                grid-template-columns: repeat(5, 1fr);
+                flex-direction: column;
+                align-items: center;
             }
         }
         .video-card {
+            width: 320px;
             background: hsl(var(--card), 0.5);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-md);
@@ -367,10 +384,13 @@
         }
         .thumbnail {
             position: relative;
+            width: 320px;
+            height: 180px;
+            overflow: hidden;
         }
         .thumbnail img {
             width: 100%;
-            height: 150px;
+            height: 100%;
             object-fit: cover;
         }
         .duration {
@@ -445,11 +465,15 @@
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 4px;
-            font-size: 0.8rem;
-            padding: 4px 8px;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
             border-radius: var(--radius-sm);
             transition: all 0.2s ease;
+        }
+        .action-btn svg {
+            width: 16px;
+            height: 16px;
         }
         .action-btn:hover {
             color: var(--youtube-red);
@@ -623,9 +647,6 @@
             }
         }
         @media (max-width: 768px) {
-            .videos-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
             .search-controls {
                 flex-direction: column;
                 align-items: stretch;
@@ -635,9 +656,6 @@
             }
         }
         @media (max-width: 480px) {
-            .videos-grid {
-                grid-template-columns: 1fr;
-            }
             .hero-title {
                 font-size: 1.5rem;
             }
@@ -674,6 +692,79 @@
         }
         .sidebar.show + .menu-btn {
             display: none;
+        }
+        .number-control {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-sm);
+        }
+        input[type="number"] {
+            width: 80px;
+            padding: var(--spacing-sm);
+            background: hsl(var(--background), 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--foreground);
+            text-align: center;
+            font-size: 0.95rem;
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--youtube-red);
+            box-shadow: 0 0 0 2px hsl(var(--youtube-red), 0.2);
+        }
+        .arrow-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .arrow-btn {
+            background: hsl(var(--background), 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--foreground);
+            cursor: pointer;
+            width: 30px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+        .arrow-btn:hover {
+            background: var(--youtube-red);
+            color: white;
+            border-color: var(--youtube-red);
+        }
+        .arrow-btn i {
+            font-size: 0.8rem;
+        }
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: hsl(0, 0%, 10%);
+            border-radius: 10px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background-color: hsl(0, 0%, 30%);
+        }
+        .dark .sidebar::-webkit-scrollbar-thumb {
+            background-color: hsl(0, 0%, 20%);
+        }
+        .dark .sidebar::-webkit-scrollbar-thumb:hover {
+            background-color: hsl(0, 0%, 40%);
         }
     </style>
 </head>
@@ -719,18 +810,16 @@
                 <span>Sign Up</span>
             </div>
         </div>
-        <div class="sidebar-section">
-            <button class="theme-toggle" id="theme-toggle">
-                <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="5"/>
-                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-                </svg>
-                <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                </svg>
-            </button>
-        </div>
     </aside>
+    <button class="theme-toggle" id="theme-toggle">
+        <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+    </button>
     <div class="min-h-screen">
         <div class="container">
             <section class="hero-banner">
@@ -783,7 +872,16 @@
                         <option value="10">10 videos</option>
                         <option value="15">15 videos</option>
                         <option value="20">20 videos</option>
+                        <option value="25">25 videos</option>
+                        <option value="30">30 videos</option>
                     </select>
+                    <div class="number-control">
+                        <input type="number" id="video-number" min="1" max="50" value="5" step="1">
+                        <div class="arrow-buttons">
+                            <button class="arrow-btn up-btn" id="increment-video"><i class="fas fa-chevron-up"></i></button>
+                            <button class="arrow-btn down-btn" id="decrement-video"><i class="fas fa-chevron-down"></i></button>
+                        </div>
+                    </div>
                 </div>
             </section>
             <section class="categories-section">
@@ -805,7 +903,6 @@
             </section>
         </div>
     </div>
-    <!-- Login Modal -->
     <div class="modal" id="login-modal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
@@ -830,7 +927,6 @@
             </div>
         </div>
     </div>
-    <!-- Signup Modal -->
     <div class="modal" id="signup-modal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
@@ -863,7 +959,6 @@
             </div>
         </div>
     </div>
-    <!-- Playlist Modal -->
     <div class="modal" id="playlist-modal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
@@ -886,7 +981,6 @@
             </div>
         </div>
     </div>
-    <!-- Auth Required Modal -->
     <div class="modal" id="auth-required-modal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
@@ -905,13 +999,15 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // DOM Elements
             const themeToggle = document.getElementById('theme-toggle');
             const categorySearch = document.getElementById('category-search');
             const categorySuggestions = document.getElementById('category-suggestions');
             const regionSelect = document.getElementById('region');
             const videoTypeSelect = document.getElementById('video-type');
             const videoCount = document.getElementById('video-count');
+            const videoNumber = document.getElementById('video-number');
+            const incrementVideoBtn = document.getElementById('increment-video');
+            const decrementVideoBtn = document.getElementById('decrement-video');
             const categoriesContainer = document.getElementById('categories-container');
             const videosContainer = document.getElementById('videos-container');
             const loadingElement = document.getElementById('loading');
@@ -921,11 +1017,12 @@
             const sidebarToggle = document.getElementById('sidebar-toggle');
             const closeSidebar = document.getElementById('close-sidebar');
             const overlay = document.getElementById('overlay');
-            const loginBtn = document.getElementById('login-btn');
-            const signupBtn = document.getElementById('signup-btn');
+            const homeBtn = document.getElementById('home-btn');
             const favoritesBtn = document.getElementById('favorites-btn');
             const playlistsBtn = document.getElementById('playlists-btn');
             const createPlaylistBtn = document.getElementById('create-playlist-btn');
+            const loginBtn = document.getElementById('login-btn');
+            const signupBtn = document.getElementById('signup-btn');
             const loginModal = document.getElementById('login-modal');
             const signupModal = document.getElementById('signup-modal');
             const playlistModal = document.getElementById('playlist-modal');
@@ -945,7 +1042,6 @@
             const playlistsSection = document.getElementById('playlists-section');
             const authSection = document.getElementById('auth-section');
 
-            // Current state
             let categories = [];
             let currentCategory = '';
             let currentRegion = 'US';
@@ -957,7 +1053,6 @@
             let userPlaylists = [];
             let currentVideoToAdd = null;
 
-            // Initialize the page
             async function initializePage() {
                 checkLoginStatus();
                 themeToggle.addEventListener('click', toggleTheme);
@@ -966,11 +1061,13 @@
                 regionSelect.addEventListener('change', updateRegion);
                 videoTypeSelect.addEventListener('change', updateVideoType);
                 videoCount.addEventListener('change', updateVideoCount);
+                videoNumber.addEventListener('input', updateVideoNumber);
+                incrementVideoBtn.addEventListener('click', incrementVideoCount);
+                decrementVideoBtn.addEventListener('click', decrementVideoCount);
                 sidebarToggle.addEventListener('click', toggleSidebar);
                 closeSidebar.addEventListener('click', toggleSidebar);
                 overlay.addEventListener('click', toggleSidebar);
-                loginBtn.addEventListener('click', openLoginModal);
-                signupBtn.addEventListener('click', openSignupModal);
+                homeBtn.addEventListener('click', () => window.location.href = 'index.html');
                 favoritesBtn.addEventListener('click', () => window.location.href = 'favorites.html');
                 playlistsBtn.addEventListener('click', () => window.location.href = 'playlists.html');
                 createPlaylistBtn.addEventListener('click', createNewPlaylist);
@@ -988,9 +1085,19 @@
                 });
                 newPlaylistCheck.addEventListener('change', toggleNewPlaylistInput);
 
+                document.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 991 && 
+                        !sidebar.contains(e.target) && 
+                        !sidebarToggle.contains(e.target) &&
+                        sidebar.classList.contains('show')) {
+                        toggleSidebar();
+                    }
+                });
+
                 if (window.innerWidth <= 991) {
                     sidebar.classList.remove('show');
-                    overlay.style.display = 'none';
+                    overlay.classList.remove('show');
+                    overlay.style.pointerEvents = 'none';
                     sidebarToggle.style.display = 'flex';
                 } else {
                     sidebar.classList.add('show');
@@ -1007,10 +1114,12 @@
                     currentUser = JSON.parse(userData);
                     isLoggedIn = true;
                     updateAuthUI();
-                    const playlists = localStorage.getItem(`playlists_${currentUser.email}`);
-                    if (playlists) {
-                        userPlaylists = JSON.parse(playlists);
+                    try {
+                        userPlaylists = JSON.parse(localStorage.getItem(`playlists_${currentUser.email}`)) || [];
                         renderPlaylists();
+                    } catch (error) {
+                        errorElement.style.display = 'block';
+                        errorElement.textContent = `Error loading playlists: ${error.message}`;
                     }
                 }
             }
@@ -1046,8 +1155,10 @@
 
             function toggleSidebar() {
                 sidebar.classList.toggle('show');
-                overlay.classList.toggle('show');
-                sidebarToggle.style.display = sidebar.classList.contains('show') ? 'none' : 'flex';
+                const isSidebarOpen = sidebar.classList.contains('show');
+                overlay.classList.toggle('show', isSidebarOpen);
+                overlay.style.pointerEvents = isSidebarOpen ? 'auto' : 'none';
+                sidebarToggle.style.display = isSidebarOpen ? 'none' : 'flex';
             }
 
             function toggleTheme() {
@@ -1124,8 +1235,40 @@
 
             function updateVideoCount() {
                 currentVideoCount = parseInt(videoCount.value);
-                if (currentVideoCount < 1) currentVideoCount = 1;
-                if (currentVideoCount > 20) currentVideoCount = 20;
+                if (isNaN(currentVideoCount) || currentVideoCount < 1) currentVideoCount = 1;
+                if (currentVideoCount > 50) currentVideoCount = 50;
+                videoNumber.value = currentVideoCount;
+                fetchTrendingVideos();
+            }
+
+            function updateVideoNumber() {
+                let value = parseInt(videoNumber.value);
+                if (isNaN(value) || value < 1) {
+                    value = 1;
+                    videoNumber.value = 1;
+                } else if (value > 50) {
+                    value = 50;
+                    videoNumber.value = 50;
+                }
+                currentVideoCount = value;
+                videoCount.value = currentVideoCount;
+                fetchTrendingVideos();
+            }
+
+            function incrementVideoCount() {
+                let value = parseInt(videoNumber.value) + 1;
+                if (value > 50) value = 50;
+                videoNumber.value = value;
+                currentVideoCount = value;
+                videoCount.value = currentVideoCount;
+                fetchTrendingVideos();
+            }
+
+            function decrementVideoCount() {
+                let value = parseInt(videoNumber.value) - 1;
+                if (value < 1) value = 1;
+                videoNumber.value = value;
+                currentVideoCount = value;
                 videoCount.value = currentVideoCount;
                 fetchTrendingVideos();
             }
@@ -1193,11 +1336,9 @@
                         <div class="video-actions">
                             <button class="action-btn like-btn" data-video-id="${video.id}">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                                <span>Favorite</span>
                             </button>
                             <button class="action-btn playlist-btn" data-video-id="${video.id}">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-                                <span>Add to Playlist</span>
                             </button>
                         </div>
                     `;
@@ -1219,13 +1360,18 @@
                     showAuthRequiredModal();
                     return;
                 }
-                let favorites = JSON.parse(localStorage.getItem(`favorites_${currentUser.email}`)) || [];
-                if (!favorites.some(fav => fav.id === video.id)) {
-                    favorites.push(video);
-                    localStorage.setItem(`favorites_${currentUser.email}`, JSON.stringify(favorites));
-                    alert('Video added to favorites!');
-                } else {
-                    alert('This video is already in your favorites!');
+                try {
+                    let favorites = JSON.parse(localStorage.getItem(`favorites_${currentUser.email}`)) || [];
+                    if (!favorites.some(fav => fav.id === video.id)) {
+                        favorites.push(video);
+                        localStorage.setItem(`favorites_${currentUser.email}`, JSON.stringify(favorites));
+                        alert('Video added to favorites!');
+                    } else {
+                        alert('This video is already in your favorites!');
+                    }
+                } catch (error) {
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = `Error adding to favorites: ${error.message}`;
                 }
             }
 
@@ -1266,32 +1412,66 @@
             }
 
             function saveToPlaylist() {
-                if (newPlaylistCheck.checked && newPlaylistInput.value.trim()) {
-                    const newPlaylistName = newPlaylistInput.value.trim();
+                try {
+                    if (newPlaylistCheck.checked && newPlaylistInput.value.trim()) {
+                        const newPlaylistName = newPlaylistInput.value.trim();
+                        if (userPlaylists.some(p => p.name === newPlaylistName)) {
+                            alert('A playlist with this name already exists.');
+                            return;
+                        }
+                        const newPlaylist = {
+                            name: newPlaylistName,
+                            videos: [currentVideoToAdd],
+                            lastUpdated: new Date().toISOString()
+                        };
+                        userPlaylists.push(newPlaylist);
+                        localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                        renderPlaylists();
+                    }
+                    const checkboxes = document.querySelectorAll('.playlist-checkbox:not(#new-playlist-check)');
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.checked && !checkbox.disabled) {
+                            const playlistName = checkbox.id.replace('playlist-', '');
+                            const playlist = userPlaylists.find(p => p.name === playlistName);
+                            if (playlist && !playlist.videos.some(v => v.id === currentVideoToAdd.id)) {
+                                playlist.videos.push(currentVideoToAdd);
+                                playlist.lastUpdated = new Date().toISOString();
+                            }
+                        }
+                    });
+                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                    playlistModal.classList.remove('show');
+                    newPlaylistCheck.checked = false;
+                    newPlaylistInput.style.display = 'none';
+                    newPlaylistInput.value = '';
+                    alert('Video added to playlist(s)!');
+                } catch (error) {
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = `Error saving to playlist: ${error.message}`;
+                }
+            }
+
+            function createNewPlaylist() {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                const playlistName = prompt('Enter a name for your new playlist:');
+                if (playlistName && playlistName.trim()) {
+                    if (userPlaylists.some(p => p.name === playlistName.trim())) {
+                        alert('A playlist with this name already exists.');
+                        return;
+                    }
                     const newPlaylist = {
-                        name: newPlaylistName,
-                        videos: [currentVideoToAdd]
+                        name: playlistName.trim(),
+                        videos: [],
+                        lastUpdated: new Date().toISOString()
                     };
                     userPlaylists.push(newPlaylist);
                     localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
                     renderPlaylists();
+                    alert(`Playlist "${playlistName}" created!`);
                 }
-                const checkboxes = document.querySelectorAll('.playlist-checkbox:not(#new-playlist-check)');
-                checkboxes.forEach(checkbox => {
-                    if (checkbox.checked && !checkbox.disabled) {
-                        const playlistName = checkbox.id.replace('playlist-', '');
-                        const playlist = userPlaylists.find(p => p.name === playlistName);
-                        if (playlist && !playlist.videos.some(v => v.id === currentVideoToAdd.id)) {
-                            playlist.videos.push(currentVideoToAdd);
-                        }
-                    }
-                });
-                localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
-                playlistModal.classList.remove('show');
-                newPlaylistCheck.checked = false;
-                newPlaylistInput.style.display = 'none';
-                newPlaylistInput.value = '';
-                alert('Video added to playlist(s)!');
             }
 
             function renderPlaylists() {
@@ -1304,10 +1484,65 @@
                     playlistItem.innerHTML = `
                         <i class="fas fa-list-ul"></i>
                         <span>${playlist.name}</span>
+                        <div class="playlist-actions">
+                            <button class="playlist-action-btn rename-btn" data-playlist-name="${playlist.name}" title="Rename Playlist">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button class="playlist-action-btn delete-btn" data-playlist-name="${playlist.name}" title="Delete Playlist">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18M6 6v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6M10 11v6M14 11v6"/>
+                                </svg>
+                            </button>
+                        </div>
                     `;
-                    playlistItem.addEventListener('click', () => window.location.href = `playlists.html?name=${encodeURIComponent(playlist.name)}`);
+                    playlistItem.addEventListener('click', (e) => {
+                        if (!e.target.closest('.playlist-action-btn')) {
+                            window.location.href = `playlists.html?name=${encodeURIComponent(playlist.name)}`;
+                        }
+                    });
+                    const renameBtn = playlistItem.querySelector('.rename-btn');
+                    renameBtn.addEventListener('click', () => renamePlaylist(playlist.name));
+                    const deleteBtn = playlistItem.querySelector('.delete-btn');
+                    deleteBtn.addEventListener('click', () => deletePlaylist(playlist.name));
                     playlistsSection.insertBefore(playlistItem, createPlaylistBtn);
                 });
+            }
+
+            function renamePlaylist(oldName) {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                const newName = prompt('Enter new playlist name:', oldName);
+                if (newName && newName.trim() && newName.trim() !== oldName) {
+                    if (userPlaylists.some(p => p.name === newName.trim())) {
+                        alert('A playlist with this name already exists.');
+                        return;
+                    }
+                    const playlist = userPlaylists.find(p => p.name === oldName);
+                    if (playlist) {
+                        playlist.name = newName.trim();
+                        playlist.lastUpdated = new Date().toISOString();
+                        localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                        renderPlaylists();
+                        alert(`Playlist renamed to "${newName.trim()}"`);
+                    }
+                }
+            }
+
+            function deletePlaylist(playlistName) {
+                if (!isLoggedIn) {
+                    showAuthRequiredModal();
+                    return;
+                }
+                if (confirm(`Are you sure you want to delete the playlist "${playlistName}"?`)) {
+                    userPlaylists = userPlaylists.filter(p => p.name !== playlistName);
+                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                    renderPlaylists();
+                    alert(`Playlist "${playlistName}" deleted`);
+                }
             }
 
             function openLoginModal() {
@@ -1335,22 +1570,27 @@
                     alert('Please enter both email and password.');
                     return;
                 }
-                const users = JSON.parse(localStorage.getItem('users')) || [];
-                const user = users.find(u => u.email === email && u.password === password);
-                if (user) {
-                    currentUser = { name: user.name, email: user.email };
-                    isLoggedIn = true;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    const playlists = localStorage.getItem(`playlists_${currentUser.email}`);
-                    if (playlists) {
-                        userPlaylists = JSON.parse(playlists);
-                        renderPlaylists();
+                try {
+                    const users = JSON.parse(localStorage.getItem('users')) || [];
+                    const user = users.find(u => u.email === email && u.password === password);
+                    if (user) {
+                        currentUser = { name: user.name, email: user.email };
+                        isLoggedIn = true;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        const playlists = localStorage.getItem(`playlists_${currentUser.email}`);
+                        if (playlists) {
+                            userPlaylists = JSON.parse(playlists);
+                            renderPlaylists();
+                        }
+                        updateAuthUI();
+                        loginModal.classList.remove('show');
+                        alert(`Welcome back, ${user.name}!`);
+                    } else {
+                        alert('Invalid email or password.');
                     }
-                    updateAuthUI();
-                    loginModal.classList.remove('show');
-                    alert(`Welcome back, ${user.name}!`);
-                } else {
-                    alert('Invalid email or password.');
+                } catch (error) {
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = `Error during login: ${error.message}`;
                 }
             }
 
@@ -1367,22 +1607,27 @@
                     alert('Passwords do not match.');
                     return;
                 }
-                const users = JSON.parse(localStorage.getItem('users')) || [];
-                if (users.some(u => u.email === email)) {
-                    alert('An account with this email already exists.');
-                    return;
+                try {
+                    const users = JSON.parse(localStorage.getItem('users')) || [];
+                    if (users.some(u => u.email === email)) {
+                        alert('An account with this email already exists.');
+                        return;
+                    }
+                    const newUser = { name, email, password };
+                    users.push(newUser);
+                    localStorage.setItem('users', JSON.stringify(users));
+                    currentUser = { name, email };
+                    isLoggedIn = true;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    userPlaylists = [];
+                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                    updateAuthUI();
+                    signupModal.classList.remove('show');
+                    alert(`Welcome to TrendTube, ${name}!`);
+                } catch (error) {
+                    errorElement.style.display = 'block';
+                    errorElement.textContent = `Error during signup: ${error.message}`;
                 }
-                const newUser = { name, email, password };
-                users.push(newUser);
-                localStorage.setItem('users', JSON.stringify(users));
-                currentUser = { name, email };
-                isLoggedIn = true;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                userPlaylists = [];
-                localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
-                updateAuthUI();
-                signupModal.classList.remove('show');
-                alert(`Welcome to TrendTube, ${name}!`);
             }
 
             function handleLogout() {
@@ -1395,24 +1640,6 @@
                     const existingPlaylists = playlistsSection.querySelectorAll('.sidebar-item:not(#create-playlist-btn)');
                     existingPlaylists.forEach(item => item.remove());
                     alert('You have been logged out.');
-                }
-            }
-
-            function createNewPlaylist() {
-                if (!isLoggedIn) {
-                    showAuthRequiredModal();
-                    return;
-                }
-                const playlistName = prompt('Enter a name for your new playlist:');
-                if (playlistName && playlistName.trim()) {
-                    const newPlaylist = {
-                        name: playlistName.trim(),
-                        videos: []
-                    };
-                    userPlaylists.push(newPlaylist);
-                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
-                    renderPlaylists();
-                    alert(`Playlist "${playlistName}" created!`);
                 }
             }
 

@@ -84,6 +84,20 @@ import User from '../models/User.js';
      }
    }
 
+   export async function changePlaylistName(req, res) {
+     try {
+       const user = await User.findById(req.userId);
+       const { oldName, newName } = req.body;
+       const playlist = user.playlists.find(p => p.name === oldName);
+       if (!playlist) return res.status(400).json({ error: 'Playlist not found' });
+       playlist.name = newName;
+       await user.save();
+       res.json(user.playlists);
+     } catch (error) {
+       res.status(500).json({ error: error.message });
+     }
+   }
+
    export async function removeFromPlaylist(req, res) {
      try {
        const user = await User.findById(req.userId);

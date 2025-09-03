@@ -29,3 +29,7 @@ import bcrypt from 'bcrypt';
        res.status(500).json({ error: error.message });
      }
    }
+
+  //  export async function logout(req, res) {
+
+  //  }
