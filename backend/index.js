@@ -1,12 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import connect from './config/db.js';
+import connect from './src/config/db.js';
 
-import apiRoutes from './routes/api.js';
-import authRoutes from './routes/auth.routes.js';
-import favoritesRoutes from './routes/favorites.routes.js';
-import playlistRoutes from './routes/playlist.routes.js';
+import apiRoutes from './src/routes/api.js';
+import authRoutes from './src/routes/auth.routes.js';
+import favoritesRoutes from './src/routes/favorites.routes.js';
+import playlistRoutes from './src/routes/playlist.routes.js';
 
 dotenv.config();
 
