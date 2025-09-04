@@ -10,7 +10,7 @@ import authRoutes from './src/routes/auth.routes.js';
 import favoritesRoutes from './src/routes/favorites.routes.js';
 import playlistRoutes from './src/routes/playlist.routes.js';
 
-dotenv.connectDB();
+dotenv.config();
 
 const app = express();
 
