@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connect from './src/config/db.js';
+import serverless from "serverless-http";
 
 import apiRoutes from './src/routes/api.js';
 import authRoutes from './src/routes/auth.routes.js';
@@ -26,9 +27,12 @@ app.use('/api', authRoutes);
 app.use('/api', favoritesRoutes);
 app.use('/api', playlistRoutes);
 
-app.get('/', (req, res) => {
-  res.json({ message: 'YouTube Trend Analyzer API' });
+
+
+app.get("/", (req, res) => {
+  res.json({ message: "YouTube Trend Analyzer API" });
 });
 
-// ✅ For Vercel, just export app
-export default app;
+// ✅ For Vercel
+
+export const handler = serverless(app);
