@@ -999,7 +999,6 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const API_URL = '/api'; // Use relative path for Vercel monorepo
             const themeToggle = document.getElementById('theme-toggle');
             const categorySearch = document.getElementById('category-search');
             const categorySuggestions = document.getElementById('category-suggestions');
@@ -1073,15 +1072,15 @@
                 playlistsBtn.addEventListener('click', () => window.location.href = 'playlists.html');
                 createPlaylistBtn.addEventListener('click', createNewPlaylist);
                 closeModalButtons.forEach(btn => btn.addEventListener('click', closeAllModals));
-                closeLoginBtn.addEventListener('click', () => loginModal.classList.remove('show'));
+                closeLoginBtn.addEventListener('click', () => loginModal.style.display = 'none');
                 submitLoginBtn.addEventListener('click', handleLogin);
-                closeSignupBtn.addEventListener('click', () => signupModal.classList.remove('show'));
+                closeSignupBtn.addEventListener('click', () => signupModal.style.display = 'none');
                 submitSignupBtn.addEventListener('click', handleSignup);
-                closePlaylistModalBtn.addEventListener('click', () => playlistModal.classList.remove('show'));
+                closePlaylistModalBtn.addEventListener('click', () => playlistModal.style.display = 'none');
                 saveToPlaylistBtn.addEventListener('click', saveToPlaylist);
-                closeAuthRequiredBtn.addEventListener('click', () => authRequiredModal.classList.remove('show'));
+                closeAuthRequiredBtn.addEventListener('click', () => authRequiredModal.style.display = 'none');
                 goToLoginBtn.addEventListener('click', () => {
-                    authRequiredModal.classList.remove('show');
+                    authRequiredModal.style.display = 'none';
                     openLoginModal();
                 });
                 newPlaylistCheck.addEventListener('change', toggleNewPlaylistInput);
@@ -1109,30 +1108,18 @@
                 fetchTrendingVideos();
             }
 
-            async function checkLoginStatus() {
-                const token = localStorage.getItem('token');
-                if (token) {
+            function checkLoginStatus() {
+                const userData = localStorage.getItem('currentUser');
+                if (userData) {
+                    currentUser = JSON.parse(userData);
+                    isLoggedIn = true;
+                    updateAuthUI();
                     try {
-                        const response = await fetch(`${API_URL}/auth/me`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        });
-                        if (response.ok) {
-                            currentUser = await response.json();
-                            isLoggedIn = true;
-                            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                            updateAuthUI();
-                            await fetchPlaylists();
-                        } else {
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('currentUser');
-                            isLoggedIn = false;
-                            updateAuthUI();
-                        }
+                        userPlaylists = JSON.parse(localStorage.getItem(`playlists_${currentUser.email}`)) || [];
+                        renderPlaylists();
                     } catch (error) {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('currentUser');
-                        isLoggedIn = false;
-                        updateAuthUI();
+                        errorElement.style.display = 'block';
+                        errorElement.textContent = `Error loading playlists: ${error.message}`;
                     }
                 }
             }
@@ -1189,7 +1176,7 @@
 
             async function fetchCategories() {
                 try {
-                    const response = await fetch(`${API_URL}/categories?regionCode=${currentRegion}`);
+                    const response = await fetch(`http://localhost:5000/api/categories?regionCode=${currentRegion}`);
                     if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
                     categories = await response.json();
                     updateCategories();
@@ -1308,7 +1295,7 @@
                 videosContainer.innerHTML = '';
 
                 try {
-                    const url = `${API_URL}/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
+                    const url = `http://localhost:5000/api/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
                     const response = await fetch(url);
                     if (!response.ok) throw new Error(`Failed to fetch videos: ${response.status}`);
                     const data = await response.json();
@@ -1368,106 +1355,34 @@
                 });
             }
 
-            async function addToFavorites(video) {
+            function addToFavorites(video) {
                 if (!isLoggedIn) {
                     showAuthRequiredModal();
                     return;
                 }
                 try {
-                    const response = await fetch(`${API_URL}/favorites`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${localStorage.getItem('token')}`,
-                        },
-                        body: JSON.stringify(video),
-                    });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Failed to add to favorites');
+                    let favorites = JSON.parse(localStorage.getItem(`favorites_${currentUser.email}`)) || [];
+                    if (!favorites.some(fav => fav.id === video.id)) {
+                        favorites.push(video);
+                        localStorage.setItem(`favorites_${currentUser.email}`, JSON.stringify(favorites));
+                        alert('Video added to favorites!');
+                    } else {
+                        alert('This video is already in your favorites!');
                     }
-                    alert('Video added to favorites!');
                 } catch (error) {
                     errorElement.style.display = 'block';
                     errorElement.textContent = `Error adding to favorites: ${error.message}`;
                 }
             }
 
-            async function openPlaylistModal(video) {
+            function openPlaylistModal(video) {
                 if (!isLoggedIn) {
                     showAuthRequiredModal();
                     return;
                 }
                 currentVideoToAdd = video;
-                await fetchPlaylists();
                 renderPlaylistOptions();
                 playlistModal.classList.add('show');
-            }
-
-            async function fetchPlaylists() {
-                if (!isLoggedIn) return;
-                try {
-                    const response = await fetch(`${API_URL}/playlists`, {
-                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-                    });
-                    if (!response.ok) throw new Error('Failed to fetch playlists');
-                    userPlaylists = await response.json();
-                    renderPlaylists();
-                } catch (error) {
-                    errorElement.style.display = 'block';
-                    errorElement.textContent = `Error fetching playlists: ${error.message}`;
-                }
-            }
-
-            function renderPlaylists() {
-                const existingPlaylists = playlistsSection.querySelectorAll('.sidebar-item:not(#create-playlist-btn)');
-                existingPlaylists.forEach(item => item.remove());
-
-                userPlaylists.forEach(playlist => {
-                    const playlistItem = document.createElement('div');
-                    playlistItem.className = 'sidebar-item';
-                    playlistItem.innerHTML = `
-                        <i class="fas fa-list"></i>
-                        <span>${playlist.name}</span>
-                    `;
-                    playlistItem.addEventListener('click', () => {
-                        window.location.href = `playlists.html?name=${encodeURIComponent(playlist.name)}`;
-                    });
-                    playlistItem.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        const menu = document.createElement('div');
-                        menu.style.position = 'absolute';
-                        menu.style.background = 'var(--card)';
-                        menu.style.border = '1px solid var(--border)';
-                        menu.style.borderRadius = 'var(--radius-sm)';
-                        menu.style.padding = 'var(--spacing-sm)';
-                        menu.style.zIndex = '1000';
-                        menu.innerHTML = `
-                            <div class="context-item" style="padding: var(--spacing-sm); cursor: pointer;">Rename</div>
-                            <div class="context-item" style="padding: var(--spacing-sm); cursor: pointer;">Delete</div>
-                        `;
-                        menu.style.top = `${e.clientY}px`;
-                        menu.style.left = `${e.clientX}px`;
-                        document.body.appendChild(menu);
-
-                        const renameBtn = menu.querySelectorAll('.context-item')[0];
-                        const deleteBtn = menu.querySelectorAll('.context-item')[1];
-                        renameBtn.addEventListener('click', () => {
-                            renamePlaylist(playlist.name);
-                            menu.remove();
-                        });
-                        deleteBtn.addEventListener('click', () => {
-                            deletePlaylist(playlist.name);
-                            menu.remove();
-                        });
-
-                        document.addEventListener('click', function removeMenu() {
-                            menu.remove();
-                            document.removeEventListener('click', removeMenu);
-                        }, { once: true });
-                    });
-                    playlistsSection.appendChild(playlistItem);
-                });
             }
 
             function renderPlaylistOptions() {
@@ -1496,38 +1411,39 @@
                 newPlaylistInput.style.display = newPlaylistCheck.checked ? 'block' : 'none';
             }
 
-            async function saveToPlaylist() {
+            function saveToPlaylist() {
                 try {
                     if (newPlaylistCheck.checked && newPlaylistInput.value.trim()) {
                         const newPlaylistName = newPlaylistInput.value.trim();
-                        const response = await fetch(`${API_URL}/playlists`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${localStorage.getItem('token')}`,
-                            },
-                            body: JSON.stringify({ name: newPlaylistName }),
-                        });
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || 'Failed to create playlist');
+                        if (userPlaylists.some(p => p.name === newPlaylistName)) {
+                            alert('A playlist with this name already exists.');
+                            return;
                         }
-                        const newPlaylist = await response.json();
+                        const newPlaylist = {
+                            name: newPlaylistName,
+                            videos: [currentVideoToAdd],
+                            lastUpdated: new Date().toISOString()
+                        };
                         userPlaylists.push(newPlaylist);
-                        await addVideoToPlaylist(newPlaylist.name, currentVideoToAdd);
+                        localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                        renderPlaylists();
                     }
                     const checkboxes = document.querySelectorAll('.playlist-checkbox:not(#new-playlist-check)');
-                    for (const checkbox of checkboxes) {
+                    checkboxes.forEach(checkbox => {
                         if (checkbox.checked && !checkbox.disabled) {
                             const playlistName = checkbox.id.replace('playlist-', '');
-                            await addVideoToPlaylist(playlistName, currentVideoToAdd);
+                            const playlist = userPlaylists.find(p => p.name === playlistName);
+                            if (playlist && !playlist.videos.some(v => v.id === currentVideoToAdd.id)) {
+                                playlist.videos.push(currentVideoToAdd);
+                                playlist.lastUpdated = new Date().toISOString();
+                            }
                         }
-                    }
+                    });
+                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
                     playlistModal.classList.remove('show');
                     newPlaylistCheck.checked = false;
                     newPlaylistInput.style.display = 'none';
                     newPlaylistInput.value = '';
-                    await fetchPlaylists();
                     alert('Video added to playlist(s)!');
                 } catch (error) {
                     errorElement.style.display = 'block';
@@ -1535,121 +1451,97 @@
                 }
             }
 
-            async function addVideoToPlaylist(playlistName, video) {
-                try {
-                    const response = await fetch(`${API_URL}/playlists/add`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${localStorage.getItem('token')}`,
-                        },
-                        body: JSON.stringify({ playlistName, video }),
-                    });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Failed to add video to playlist');
-                    }
-                    const updatedPlaylist = await response.json();
-                    const index = userPlaylists.findIndex(p => p.name === playlistName);
-                    if (index !== -1) {
-                        userPlaylists[index] = updatedPlaylist;
-                    }
-                } catch (error) {
-                    throw new Error(error.message);
-                }
-            }
-
-            async function createNewPlaylist() {
+            function createNewPlaylist() {
                 if (!isLoggedIn) {
                     showAuthRequiredModal();
                     return;
                 }
                 const playlistName = prompt('Enter a name for your new playlist:');
                 if (playlistName && playlistName.trim()) {
-                    try {
-                        const response = await fetch(`${API_URL}/playlists`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${localStorage.getItem('token')}`,
-                            },
-                            body: JSON.stringify({ name: playlistName.trim() }),
-                        });
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || 'Failed to create playlist');
-                        }
-                        const newPlaylist = await response.json();
-                        userPlaylists.push(newPlaylist);
-                        await fetchPlaylists();
-                        alert(`Playlist "${playlistName}" created!`);
-                    } catch (error) {
-                        errorElement.style.display = 'block';
-                        errorElement.textContent = `Error creating playlist: ${error.message}`;
+                    if (userPlaylists.some(p => p.name === playlistName.trim())) {
+                        alert('A playlist with this name already exists.');
+                        return;
                     }
+                    const newPlaylist = {
+                        name: playlistName.trim(),
+                        videos: [],
+                        lastUpdated: new Date().toISOString()
+                    };
+                    userPlaylists.push(newPlaylist);
+                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                    renderPlaylists();
+                    alert(`Playlist "${playlistName}" created!`);
                 }
             }
 
-            async function renamePlaylist(oldName) {
+            function renderPlaylists() {
+                const existingPlaylists = playlistsSection.querySelectorAll('.sidebar-item:not(#create-playlist-btn)');
+                existingPlaylists.forEach(item => item.remove());
+                userPlaylists.forEach(playlist => {
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = 'sidebar-item';
+                    playlistItem.dataset.playlist = playlist.name;
+                    playlistItem.innerHTML = `
+                        <i class="fas fa-list-ul"></i>
+                        <span>${playlist.name}</span>
+                        <div class="playlist-actions">
+                            <button class="playlist-action-btn rename-btn" data-playlist-name="${playlist.name}" title="Rename Playlist">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button class="playlist-action-btn delete-btn" data-playlist-name="${playlist.name}" title="Delete Playlist">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18M6 6v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6M10 11v6M14 11v6"/>
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                    playlistItem.addEventListener('click', (e) => {
+                        if (!e.target.closest('.playlist-action-btn')) {
+                            window.location.href = `playlists.html?name=${encodeURIComponent(playlist.name)}`;
+                        }
+                    });
+                    const renameBtn = playlistItem.querySelector('.rename-btn');
+                    renameBtn.addEventListener('click', () => renamePlaylist(playlist.name));
+                    const deleteBtn = playlistItem.querySelector('.delete-btn');
+                    deleteBtn.addEventListener('click', () => deletePlaylist(playlist.name));
+                    playlistsSection.insertBefore(playlistItem, createPlaylistBtn);
+                });
+            }
+
+            function renamePlaylist(oldName) {
                 if (!isLoggedIn) {
                     showAuthRequiredModal();
                     return;
                 }
                 const newName = prompt('Enter new playlist name:', oldName);
                 if (newName && newName.trim() && newName.trim() !== oldName) {
-                    try {
-                        const response = await fetch(`${API_URL}/playlists`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${localStorage.getItem('token')}`,
-                            },
-                            body: JSON.stringify({ oldName, newName: newName.trim() }),
-                        });
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || 'Failed to rename playlist');
-                        }
-                        const updatedPlaylist = await response.json();
-                        const index = userPlaylists.findIndex(p => p.name === oldName);
-                        if (index !== -1) {
-                            userPlaylists[index] = updatedPlaylist;
-                        }
-                        await fetchPlaylists();
+                    if (userPlaylists.some(p => p.name === newName.trim())) {
+                        alert('A playlist with this name already exists.');
+                        return;
+                    }
+                    const playlist = userPlaylists.find(p => p.name === oldName);
+                    if (playlist) {
+                        playlist.name = newName.trim();
+                        playlist.lastUpdated = new Date().toISOString();
+                        localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                        renderPlaylists();
                         alert(`Playlist renamed to "${newName.trim()}"`);
-                    } catch (error) {
-                        errorElement.style.display = 'block';
-                        errorElement.textContent = `Error renaming playlist: ${error.message}`;
                     }
                 }
             }
 
-            async function deletePlaylist(playlistName) {
+            function deletePlaylist(playlistName) {
                 if (!isLoggedIn) {
                     showAuthRequiredModal();
                     return;
                 }
                 if (confirm(`Are you sure you want to delete the playlist "${playlistName}"?`)) {
-                    try {
-                        const response = await fetch(`${API_URL}/playlists`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${localStorage.getItem('token')}`,
-                            },
-                            body: JSON.stringify({ name: playlistName }),
-                        });
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || 'Failed to delete playlist');
-                        }
-                        userPlaylists = userPlaylists.filter(p => p.name !== playlistName);
-                        await fetchPlaylists();
-                        alert(`Playlist "${playlistName}" deleted`);
-                    } catch (error) {
-                        errorElement.style.display = 'block';
-                        errorElement.textContent = `Error deleting playlist: ${error.message}`;
-                    }
+                    userPlaylists = userPlaylists.filter(p => p.name !== playlistName);
+                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
+                    renderPlaylists();
+                    alert(`Playlist "${playlistName}" deleted`);
                 }
             }
 
@@ -1671,7 +1563,7 @@
                 });
             }
 
-            async function handleLogin() {
+            function handleLogin() {
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
                 if (!email || !password) {
@@ -1679,31 +1571,30 @@
                     return;
                 }
                 try {
-                    const response = await fetch(`${API_URL}/auth/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password }),
-                    });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Invalid email or password.');
+                    const users = JSON.parse(localStorage.getItem('users')) || [];
+                    const user = users.find(u => u.email === email && u.password === password);
+                    if (user) {
+                        currentUser = { name: user.name, email: user.email };
+                        isLoggedIn = true;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        const playlists = localStorage.getItem(`playlists_${currentUser.email}`);
+                        if (playlists) {
+                            userPlaylists = JSON.parse(playlists);
+                            renderPlaylists();
+                        }
+                        updateAuthUI();
+                        loginModal.classList.remove('show');
+                        alert(`Welcome back, ${user.name}!`);
+                    } else {
+                        alert('Invalid email or password.');
                     }
-                    const { token, user } = await response.json();
-                    localStorage.setItem('token', token);
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    currentUser = user;
-                    isLoggedIn = true;
-                    updateAuthUI();
-                    await fetchPlaylists();
-                    loginModal.classList.remove('show');
-                    alert(`Welcome back, ${user.name}!`);
                 } catch (error) {
                     errorElement.style.display = 'block';
                     errorElement.textContent = `Error during login: ${error.message}`;
                 }
             }
 
-            async function handleSignup() {
+            function handleSignup() {
                 const name = document.getElementById('signup-name').value;
                 const email = document.getElementById('signup-email').value;
                 const password = document.getElementById('signup-password').value;
@@ -1717,22 +1608,20 @@
                     return;
                 }
                 try {
-                    const response = await fetch(`${API_URL}/auth/register`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, email, password }),
-                    });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Failed to sign up.');
+                    const users = JSON.parse(localStorage.getItem('users')) || [];
+                    if (users.some(u => u.email === email)) {
+                        alert('An account with this email already exists.');
+                        return;
                     }
-                    const { token, user } = await response.json();
-                    localStorage.setItem('token', token);
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    currentUser = user;
+                    const newUser = { name, email, password };
+                    users.push(newUser);
+                    localStorage.setItem('users', JSON.stringify(users));
+                    currentUser = { name, email };
                     isLoggedIn = true;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    userPlaylists = [];
+                    localStorage.setItem(`playlists_${currentUser.email}`, JSON.stringify(userPlaylists));
                     updateAuthUI();
-                    await fetchPlaylists();
                     signupModal.classList.remove('show');
                     alert(`Welcome to TrendTube, ${name}!`);
                 } catch (error) {
@@ -1741,9 +1630,8 @@
                 }
             }
 
-            async function handleLogout() {
+            function handleLogout() {
                 if (confirm('Are you sure you want to logout?')) {
-                    localStorage.removeItem('token');
                     localStorage.removeItem('currentUser');
                     isLoggedIn = false;
                     currentUser = null;
