@@ -31,7 +31,7 @@ app.use("/api", playlistRoutes);
 
 // app.get("/", (req, res) => {
 //   res.json({ message: "YouTube Trend Analyzer API" });
-// });
+// })
 
 // ✅ Export handler for Vercel
 export const handler = serverless(app);
