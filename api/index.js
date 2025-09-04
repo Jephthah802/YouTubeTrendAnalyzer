@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import serverless from 'serverless-http';
-import connect from './src/config/db.js';
+import connectDB from './src/config/db.js';
 
 import apiRoutes from './src/routes/api.js';
 import authRoutes from './src/routes/auth.routes.js';
@@ -20,7 +20,7 @@ app.use(cors({
 app.use(express.json());
 
 // Connect DB
-connect();
+connectDB();
 
 // Mount routes
 app.use('/api', apiRoutes);
