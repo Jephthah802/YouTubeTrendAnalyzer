@@ -24,10 +24,10 @@ app.use(express.json());
 connect();
 
 // Routes
-app.use("/api", apiRoutes);
-app.use("/api", authRoutes);
-app.use("/api", favoritesRoutes);
-app.use("/api", playlistRoutes);
+app.use("/", apiRoutes);
+app.use("/", authRoutes);
+app.use("/", favoritesRoutes);
+app.use("/", playlistRoutes);
 
 // app.get("/", (req, res) => {
 //   res.json({ message: "YouTube Trend Analyzer API" });
