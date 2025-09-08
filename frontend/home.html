@@ -1176,7 +1176,8 @@
 
             async function fetchCategories() {
                 try {
-                    const response = await fetch(`/api/categories?regionCode=${currentRegion}`);
+                    // const response = await fetch(`/api/categories?regionCode=${currentRegion}`);
+                    const response = await fetch(`categories?regionCode=${currentRegion}`)
                     // const response = await fetch(`http://localhost:5000/api/categories?regionCode=${currentRegion}`);
                     if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
                     categories = await response.json();
