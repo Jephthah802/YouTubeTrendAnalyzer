@@ -24,10 +24,11 @@ app.use(express.json());
 connectDB();
 
 // Mount routes
-app.use('/', apiRoutes);
-app.use('/', authRoutes);
-app.use('/', favoritesRoutes);
-app.use('/', playlistRoutes);
+app.use('/api', apiRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/favorites', favoritesRoutes);
+app.use('/api/playlists', playlistRoutes);
+
 
 app.get('/', (req, res) => {
   res.json({ message: 'YouTube Trend Analyzer API' });
