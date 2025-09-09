@@ -31,7 +31,7 @@ app.use(express.json());
 connectDB();
 
 // Mount routes (all will be available under `/api/...`)
-app.use('/api/', apiRoutes);
+app.use('/api', apiRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/playlists', playlistRoutes);
