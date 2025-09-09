@@ -1177,8 +1177,8 @@
             async function fetchCategories() {
                 try {
                     // const response = await fetch(`/api/categories?regionCode=${currentRegion}`);
-                    const response = await fetch(`categories?regionCode=${currentRegion}`)
-                    // const response = await fetch(`http://localhost:5000/api/categories?regionCode=${currentRegion}`);
+                    // const response = await fetch(`categories?regionCode=${currentRegion}`)
+                    const response = await fetch(`http://localhost:5000/api/categories?regionCode=${currentRegion}`);
                     if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
                     categories = await response.json();
                     updateCategories();
@@ -1297,10 +1297,10 @@
                 videosContainer.innerHTML = '';
 
                 try {
-                    const url = `/api/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
-                    const response = await fetch(url);
-                    // const url = `http://localhost:5000/api/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
+                    // const url = `/api/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
                     // const response = await fetch(url);
+                    const url = `http://localhost:5000/api/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
+                    const response = await fetch(url);
                     if (!response.ok) throw new Error(`Failed to fetch videos: ${response.status}`);
                     const data = await response.json();
                     displayVideos(data[currentRegion]);

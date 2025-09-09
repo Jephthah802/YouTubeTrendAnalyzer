@@ -4,8 +4,7 @@ import dotenv from 'dotenv';
 import serverless from 'serverless-http';
 import connectDB from './src/config/db.js';
 
-
-import apiRoutes from './src/routes/api.js'
+import apiRoutes from './src/routes/api.js';
 import authRoutes from './src/routes/auth.routes.js';
 import favoritesRoutes from './src/routes/favorites.routes.js';
 import playlistRoutes from './src/routes/playlist.routes.js';
@@ -14,25 +13,31 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors({
-  origin: ['https://trend-tube.vercel.app', 'http://localhost:3000'],
-  credentials: true,
-}));
+// CORS setup
+app.use(
+  cors({
+    origin: ['https://you-tube-trend-analyzer.vercel.app', 'http://localhost:5000'],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
-// Connect DB
+// Connect to MongoDB
 connectDB();
 
-// Mount routes
-app.use('/api', apiRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/favorites', favoritesRoutes);
-app.use('/api/playlists', playlistRoutes);
+// Mount API routes
+app.use('/', apiRoutes);
+app.use('/auth', authRoutes);
+app.use('/favorites', favoritesRoutes);
+app.use('/playlists', playlistRoutes);
 
-
+// Root route for API check
 app.get('/', (req, res) => {
-  res.json({ message: 'YouTube Trend Analyzer API' });
+  res.json({ message: 'YouTube Trend Analyzer API is running' });
 });
 
-// ✅ Default export for Vercel
+
+
+// Export for Vercel serverless
 export default serverless(app);

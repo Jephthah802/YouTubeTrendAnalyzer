@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Configuration Test - YouTube Trend Analyzer</title>
+    <style>
+        :root {
+            --primary: #ff0000;
+            --primary-dark: #cc0000;
+            --dark-bg: #0f0f0f;
+            --dark-card: #272727;
+            --dark-text: #ffffff;
+            --light-bg: #f9f9f9;
+            --light-card: #ffffff;
+            --light-text: #0f0f0f;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --info: #2196f3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: var(--light-bg);
+            color: var(--light-text);
+            line-height: 1.6;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        body.dark {
+            background: var(--dark-bg);
+            color: var(--dark-text);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dark header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo i {
+            font-size: 28px;
+        }
+
+        .theme-toggle {
+            background: var(--light-card);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .dark .theme-toggle {
+            background: var(--dark-card);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 16px;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: var(--light-card);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .dark .card {
+            background: var(--dark-card);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            margin-bottom: 16px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 i {
+            font-size: 24px;
+        }
+
+        .endpoint {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .dark .endpoint {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .endpoint-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .method {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 14px;
+            color: white;
+        }
+
+        .method.get {
+            background: var(--success);
+        }
+
+        .method.post {
+            background: var(--info);
+        }
+
+        .method.delete {
+            background: var(--error);
+        }
+
+        .path {
+            font-family: monospace;
+            font-size: 16px;
+        }
+
+        .test-btn {
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .test-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.03);
+            max-height: 300px;
+            overflow: auto;
+            transition: all 0.3s ease;
+        }
+
+        .dark .result {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .success {
+            color: var(--success);
+        }
+
+        .error {
+            color: var(--error);
+        }
+
+        .loading {
+            color: var(--info);
+        }
+
+        .instructions {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+
+        .dark .instructions {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+        }
+
+        .instructions h3 {
+            color: #ff9800;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .dark code {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        ol {
+            padding-left: 20px;
+            margin: 15px 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 10px;
+        }
+
+        .status.success {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+
+        .status.error {
+            background: rgba(244, 67, 54, 0.2);
+            color: var(--error);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #777;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .dark footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .endpoint {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .test-btn {
+                align-self: flex-end;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-broadcast-tower"></i>
+                <span>YouTube Trend Analyzer</span>
+            </div>
+            <button class="theme-toggle" id="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <section class="hero">
+            <h1>API Configuration Test</h1>
+            <p>Test your API endpoints to diagnose and fix the 404 error on Vercel</p>
+        </section>
+
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> How to Fix Your API Issue</h3>
+            <p>Your 404 error is caused by API routing issues. Follow these steps:</p>
+            <ol>
+                <li><strong>Update your Express routes</strong> to remove the '/api' prefix since Vercel already routes '/api/*' to your function</li>
+                <li><strong>Fix your vercel.json</strong> configuration to properly route requests</li>
+                <li><strong>Test your endpoints</strong> using the buttons below to verify they work</li>
+            </ol>
+            <p>Example fix: Change <code>app.use('/api', apiRoutes)</code> to <code>app.use('/', apiRoutes)</code></p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-plug"></i> Test API Endpoints</h2>
+            
+            <div class="endpoint">
+                <div class="endpoint-info">
+                    <span class="method get">GET</span>
+                    <span class="path">/api/trending</span>
+                </div>
+                <button class="test-btn" onclick="testEndpoint('/api/trending', 'GET')">Test Endpoint</button>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-info">
+                    <span class="method get">GET</span>
+                    <span class="path">/api/categories</span>
+                </div>
+                <button class="test-btn" onclick="testEndpoint('/api/categories', 'GET')">Test Endpoint</button>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-info">
+                    <span class="method post">POST</span>
+                    <span class="path">/api/auth/login</span>
+                </div>
+                <button class="test-btn" onclick="testEndpoint('/api/auth/login', 'POST')">Test Endpoint</button>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-info">
+                    <span class="method get">GET</span>
+                    <span class="path">/api/favorites</span>
+                </div>
+                <button class="test-btn" onclick="testEndpoint('/api/favorites', 'GET')">Test Endpoint</button>
+            </div>
+            
+            <div class="result">
+                <h3>Test Result:</h3>
+                <div id="result-content">No test run yet. Click a "Test Endpoint" button above.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-code"></i> Required Vercel Configuration</h2>
+            <p>Create a <code>vercel.json</code> file in your project root with this content:</p>
+            <pre>{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "frontend/**/*.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/",
+      "dest": "/frontend/home.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
+    }
+  ]
+}</pre>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-cogs"></i> Express Server Fix</h2>
+            <p>Update your <code>api/index.js</code> to remove the '/api' prefix from routes:</p>
+            <pre>// Remove the /api prefix from your route mounts
+app.use('/', apiRoutes);          // instead of app.use('/api', apiRoutes);
+app.use('/auth', authRoutes);     // instead of app.use('/api/auth', authRoutes);
+app.use('/favorites', favoritesRoutes); // instead of app.use('/api/favorites', favoritesRoutes);
+app.use('/playlists', playlistRoutes); // instead of app.use('/api/playlists', playlistRoutes);</pre>
+        </div>
+
+        <footer>
+            <p>YouTube Trend Analyzer &copy; 2023 | API Configuration Test</p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = themeToggle.querySelector('i');
+        
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            if (document.body.classList.contains('dark')) {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        });
+
+        // API testing function
+        async function testEndpoint(endpoint, method) {
+            const resultElement = document.getElementById('result-content');
+            resultElement.innerHTML = `<span class="loading"><i class="fas fa-spinner fa-spin"></i> Testing ${endpoint}...</span>`;
+            
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                // For POST requests, add a simple body
+                if (method === 'POST') {
+                    options.body = JSON.stringify({
+                        test: true,
+                        email: "test@example.com",
+                        password: "test123"
+                    });
+                }
+                
+                const response = await fetch(endpoint, options);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultElement.innerHTML = `
+                        <span class="success"><i class="fas fa-check-circle"></i> Success! Status: ${response.status}</span>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultElement.innerHTML = `
+                        <span class="error"><i class="fas fa-exclamation-circle"></i> Error: Status ${response.status}</span>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultElement.innerHTML = `
+                    <span class="error"><i class="fas fa-exclamation-triangle"></i> Request failed: ${error.message}</span>
+                    <p>This could indicate:</p>
+                    <ul>
+                        <li>The endpoint doesn't exist (404)</li>
+                        <li>There's a CORS issue</li>
+                        <li>The server is not responding</li>
+                    </ul>
+                    <p>Check your Vercel configuration and make sure your API routes are properly set up.</p>
+                `;
+            }
+        }
+
+        // Test all endpoints on load
+        window.addEventListener('load', () => {
+            // Test the main API endpoint first
+            testEndpoint('/api', 'GET');
+        });
+    </script>
+</body>
+</html>
