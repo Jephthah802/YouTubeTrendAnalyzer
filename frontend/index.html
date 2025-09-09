@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrendTube - Playlists</title>
+    <title>TrendTube - YouTube Trending Explorer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles/playlists.css">
+    <link rel="stylesheet" href="styles/index.css">
 </head>
 <body class="dark">
     <div class="overlay" id="overlay"></div>
@@ -17,7 +17,7 @@
             <button class="close-sidebar" id="close-sidebar"><i class="fas fa-times"></i></button>
         </div>
         <div class="sidebar-section">
-            <div class="sidebar-item" id="home-btn">
+            <div class="sidebar-item active" id="home-btn">
                 <i class="fas fa-home"></i>
                 <span>Home</span>
             </div>
@@ -28,7 +28,7 @@
                 <i class="fas fa-heart"></i>
                 <span>Favorites</span>
             </div>
-            <div class="sidebar-item active" id="playlists-btn">
+            <div class="sidebar-item" id="playlists-btn">
                 <i class="fas fa-list"></i>
                 <span>Playlists</span>
             </div>
@@ -62,25 +62,84 @@
     </button>
     <div class="min-h-screen">
         <div class="container">
-            <section class="hero-section" id="hero-section">
-                <div class="hero-background"></div>
+            <section class="hero-banner">
                 <div class="hero-overlay"></div>
-                <img src="https://via.placeholder.com/1200x300?text=Playlists" alt="Playlist Banner" class="hero-image">
                 <div class="hero-content">
-                    <h1 class="hero-title">Playlists</h1>
+                    <div class="hero-text">
+                        <h1 class="hero-title">
+                            Discover <span class="highlight">Trending</span> Videos
+                        </h1>
+                        <p class="hero-description">
+                            Explore the most popular videos worldwide. Filter by category, country, and discover what's trending now.
+                        </p>
+                    </div>
                 </div>
             </section>
-            <section class="playlists-section">
-                <h2 class="section-title" id="section-title">Your Playlists</h2>
+            <section class="search-controls">
+                <div class="control-group">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="category-search" placeholder="Search categories..." list="category-suggestions">
+                    <datalist id="category-suggestions"></datalist>
+                </div>
+                <div class="control-group">
+                    <select id="region">
+                        <option value="US">United States</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="CA">Canada</option>
+                        <option value="AU">Australia</option>
+                        <option value="DE">Germany</option>
+                        <option value="FR">France</option>
+                        <option value="JP">Japan</option>
+                        <option value="IN">India</option>
+                        <option value="BR">Brazil</option>
+                        <option value="MX">Mexico</option>
+                        <option value="NG">Nigeria</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <select id="video-type">
+                        <option value="short">Short-Form</option>
+                        <option value="all">All Videos</option>
+                        <option value="long">Long-Form</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <select id="video-count">
+                        <option value="5">5 videos</option>
+                        <option value="10">10 videos</option>
+                        <option value="15">15 videos</option>
+                        <option value="20">20 videos</option>
+                        <option value="25">25 videos</option>
+                        <option value="30">30 videos</option>
+                    </select>
+                    <div class="number-control">
+                        <input type="number" id="video-number" min="1" max="50" value="5" step="1">
+                        <div class="arrow-buttons">
+                            <button class="arrow-btn up-btn" id="increment-video"><i class="fas fa-chevron-up"></i></button>
+                            <button class="arrow-btn down-btn" id="decrement-video"><i class="fas fa-chevron-down"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="categories-section">
+                <h2 class="section-title">Categories</h2>
+                <div class="categories-container">
+                    <div class="categories" id="categories-container">
+                        <div class="category-btn active" data-category="">All Categories</div>
+                    </div>
+                </div>
+            </section>
+            <section class="videos-section">
+                <h2 class="section-title">Trending Videos</h2>
                 <div class="loading" id="loading">
-                    <i class="fas fa-spinner"></i> Loading playlists...
+                    <i class="fas fa-spinner"></i> Loading trending videos...
                 </div>
                 <div class="error" id="error" style="display: none;"></div>
                 <div class="fallback" id="fallback" style="display: none;"></div>
-                <div class="playlists-grid" id="playlists-container"></div>
-            </section>
-            <section class="videos-section">
-                <div class="videos-grid" id="videos-container" style="display: none;"></div>
+                <div class="videos-grid" id="videos-container"></div>
             </section>
         </div>
     </div>
@@ -92,7 +151,7 @@
                 <button class="close-modal"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <p>Login to view your playlists.</p>
+                <p>Login to save videos to your favorites and create playlists.</p>
                 <div class="form-group">
                     <label for="login-email">Email</label>
                     <input type="email" id="login-email" required>
@@ -140,6 +199,28 @@
             </div>
         </div>
     </div>
+    <div class="modal" id="playlist-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add to Playlist</h3>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Select playlists to add this video to:</p>
+                <div class="playlist-options" id="playlist-options"></div>
+                <div class="playlist-item">
+                    <input type="checkbox" id="new-playlist-check" class="playlist-checkbox">
+                    <label for="new-playlist-check">Create new playlist</label>
+                </div>
+                <input type="text" class="new-playlist-input" id="new-playlist-input" placeholder="New playlist name" style="display: none;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="close-playlist-modal">Cancel</button>
+                <button class="btn btn-primary" id="save-to-playlist">Save</button>
+            </div>
+        </div>
+    </div>
     <div class="modal" id="auth-required-modal">
         <div class="modal-overlay"></div>
         <div class="modal-content">
@@ -148,7 +229,7 @@
                 <button class="close-modal"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <p>You need to be logged in to view your playlists.</p>
+                <p>You need to be logged in to save videos to favorites or playlists.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="close-auth-required">Cancel</button>
@@ -156,6 +237,6 @@
             </div>
         </div>
     </div>
-    <script src="scripts/playlists.js"></script>
+    <script src="scripts/index.js"></script>
 </body>
 </html>
