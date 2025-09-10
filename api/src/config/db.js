@@ -2,10 +2,11 @@ import mongoose from "mongoose";
 import dotenv from 'dotenv';
 dotenv.config();
 // Database Connection
+
 const connectDB = async () => {
   console.log("Attempting to connect to MongoDB...");
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    const conn = await mongoose.connect( process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -17,3 +18,4 @@ const connectDB = async () => {
 };
 
 export default connectDB;
+
