@@ -37,7 +37,7 @@ app.use('/api/favorites', favoritesRoutes);
 app.use('/api/playlists', playlistRoutes);
 
 // Root check endpoint
-app.get('/api/', (req, res) => {
+app.get('/api', (req, res) => {
   res.json({ message: 'YouTube Trend Analyzer API is running ' });
 });
 
