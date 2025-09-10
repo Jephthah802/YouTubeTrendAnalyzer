@@ -9,10 +9,13 @@ export async function callYouTubeAPI(endpoint, params) {
     ...params,
     key: process.env.YOUTUBE_API_KEY,
   })}`;
+
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, { timeout: 10000 }); // 10s timeout
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.error?.message || error.message);
+    throw new Error(error.code === 'ECONNABORTED' 
+      ? 'YouTube API request timed out' 
+      : error.response?.data?.error?.message || error.message);
   }
 }
