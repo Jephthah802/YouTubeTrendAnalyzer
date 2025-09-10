@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import serverless from 'serverless-http';
 import connectDB from './src/config/db.js';
 
-// Import routes
 import apiRoutes from './src/routes/api.js';
 import authRoutes from './src/routes/auth.routes.js';
 import favoritesRoutes from './src/routes/favorites.routes.js';
@@ -14,7 +13,6 @@ dotenv.config();
 
 const app = express();
 
-// CORS setup
 app.use(
   cors({
     origin: [
@@ -27,19 +25,29 @@ app.use(
 
 app.use(express.json());
 
-// Connect to MongoDB
-connectDB();
+//  Connect only once (not on every request)
+let isConnected = false;
 
-// Mount routes (all will be available under `/api/...`)
+app.use(async (req, res, next) => {
+  if (!isConnected) {
+    await connectDB();
+    isConnected = true;
+  }
+  next();
+});
+
 app.use('/api', apiRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/playlists', playlistRoutes);
 
-// Root check endpoint
 app.get('/api', (req, res) => {
-  res.json({ message: 'YouTube Trend Analyzer API is running ' });
+  res.json({ message: 'YouTube Trend Analyzer API is running' });
 });
 
-// Export for Vercel serverless
-export default serverless(app);
+// ✅ Ensure function closes after response
+const handler = serverless(app, {
+  callbackWaitsForEmptyEventLoop: false,
+});
+
+export default handler;
