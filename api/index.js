@@ -10,6 +10,10 @@ import playlistRoutes from './src/routes/playlist.routes.js';
 
 const app = express();
 
+
+// Immediately connect to DB at module load
+await connectDB();
+
 app.use(
   cors({
     origin: [
@@ -22,17 +26,6 @@ app.use(
 
 app.use(express.json());
 
-//  Connect to DB immediately on cold start (not per request)
-console.log("[index.js]  Attempting initial DB connection...");
-connectDB()
-  .then(() => console.log("[index.js]  MongoDB connected successfully"))
-  .catch((err) => console.error("[index.js]  MongoDB connection failed:", err.message));
-
-//  Add route logging to confirm they are hit
-app.use((req, res, next) => {
-  console.log(`[index.js]  Incoming Request: ${req.method} ${req.url}`);
-  next();
-});
 
 app.use('/api', apiRoutes);
 app.use('/api/auth', authRoutes);
