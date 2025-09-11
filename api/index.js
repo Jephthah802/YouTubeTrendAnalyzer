@@ -10,10 +10,6 @@ import playlistRoutes from './src/routes/playlist.routes.js';
 
 const app = express();
 
-
-// Immediately connect to DB at module load
-await connectDB();
-
 app.use(
   cors({
     origin: [
@@ -26,6 +22,21 @@ app.use(
 
 app.use(express.json());
 
+// Connect DB on first request (lazy connection for serverless)
+let isConnected = false;
+app.use(async (req, res, next) => {
+  if (!isConnected) {
+    try {
+      await connectDB();
+      isConnected = true;
+      console.log('[index.js] MongoDB connected successfully');
+    } catch (err) {
+      console.error('[index.js] DB connection failed:', err.message);
+      return res.status(500).json({ error: 'Database connection failed' });
+    }
+  }
+  next();
+});
 
 app.use('/api', apiRoutes);
 app.use('/api/auth', authRoutes);
