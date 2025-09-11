@@ -8,8 +8,6 @@ import authRoutes from './src/routes/auth.routes.js';
 import favoritesRoutes from './src/routes/favorites.routes.js';
 import playlistRoutes from './src/routes/playlist.routes.js';
 
-// Removed dotenv.config() (not needed in Vercel)
-
 const app = express();
 
 app.use(
@@ -24,26 +22,22 @@ app.use(
 
 app.use(express.json());
 
-// Connect DB on first request, but always read env from Vercel
-let isConnected = false;
-app.use(async (req, res, next) => {
-  if (!isConnected) {
-    try {
-      await connectDB();
-      isConnected = true;
-      console.log('MongoDB connected successfully');
-    } catch (err) {
-      console.error('Failed to connect to MongoDB:', err.message);
-      return res.status(500).json({ error: 'Database connection failed' });
-    }
-  }
+//  Connect to DB immediately on cold start (not per request)
+console.log("[index.js]  Attempting initial DB connection...");
+connectDB()
+  .then(() => console.log("[index.js]  MongoDB connected successfully"))
+  .catch((err) => console.error("[index.js]  MongoDB connection failed:", err.message));
+
+//  Add route logging to confirm they are hit
+app.use((req, res, next) => {
+  console.log(`[index.js]  Incoming Request: ${req.method} ${req.url}`);
   next();
 });
 
-app.use('/', apiRoutes);
-app.use('/auth', authRoutes);
-app.use('/favorites', favoritesRoutes);
-app.use('/playlists', playlistRoutes);
+app.use('/api', apiRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/favorites', favoritesRoutes);
+app.use('/api/playlists', playlistRoutes);
 
 app.get('/api', (req, res) => {
   res.json({ message: 'YouTube Trend Analyzer API is running' });

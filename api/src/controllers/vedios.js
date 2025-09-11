@@ -134,10 +134,10 @@ export async function getTrendingVideos(req, res) {
       results[region] = response;
     }
 
-    console.log(`[getTrendingVideos] 🟢 Sending response for ${regionCodes.length} region(s)`);
+    console.log(`[getTrendingVideos]  Sending response for ${regionCodes.length} region(s)`);
     res.json(results);
   } catch (error) {
-    console.error('[getTrendingVideos] ❌ Error:', error.message);
+    console.error('[getTrendingVideos]  Error:', error.message);
     res.status(500).json({ error: error.message });
   }
 }
@@ -147,19 +147,19 @@ export async function getCategories(req, res) {
   const cacheKey = `categories_${regionCode}`;
   const cached = cache.get(cacheKey);
 
-  console.log(`[getCategories] 🟢 Request received for region ${regionCode}`);
-  console.log(`[getCategories] 🔑 API Key Present?`, process.env.YOUTUBE_API_KEY ? '✅ Yes' : '❌ No');
+  console.log(`[getCategories]  Request received for region ${regionCode}`);
+  console.log(`[getCategories]  API Key Present?`, process.env.YOUTUBE_API_KEY ? ' Yes' : ' No');
 
   if (cached) {
-    console.log(`[getCategories] 💾 Cache hit for ${regionCode}`);
+    console.log(`[getCategories]  Cache hit for ${regionCode}`);
     return res.json(cached);
   }
 
   try {
-    console.log(`[getCategories] 🔄 Cache miss. Calling YouTube API...`);
+    console.log(`[getCategories]  Cache miss. Calling YouTube API...`);
     const data = await callYouTubeAPI('videoCategories', { part: 'snippet', regionCode });
 
-    console.log(`[getCategories] 📥 Received ${data.items?.length || 0} categories from YouTube`);
+    console.log(`[getCategories]  Received ${data.items?.length || 0} categories from YouTube`);
 
     const categories = data.items.map(item => ({
       id: item.id,
@@ -167,11 +167,11 @@ export async function getCategories(req, res) {
     }));
 
     cache.set(cacheKey, categories);
-    console.log(`[getCategories] ✅ Cached and returning ${categories.length} categories for ${regionCode}`);
+    console.log(`[getCategories]  Cached and returning ${categories.length} categories for ${regionCode}`);
 
     res.json(categories);
   } catch (error) {
-    console.error(`[getCategories] ❌ Error:`, error.message);
+    console.error(`[getCategories]  Error:`, error.message);
     res.status(500).json({ error: error.message });
   }
 }
