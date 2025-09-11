@@ -130,19 +130,36 @@ export async function getTrendingVideos(req, res) {
 }
 
 export async function getCategories(req, res) {
-  const cacheKey = `categories_${req.query.regionCode || 'US'}`;
+  const regionCode = req.query.regionCode || 'US';
+  const cacheKey = `categories_${regionCode}`;
   const cached = cache.get(cacheKey);
-  if (cached) return res.json(cached);
+
+  if (cached) {
+    console.log(`[getCategories] Cache hit for region ${regionCode}`);
+    return res.json(cached);
+  }
 
   try {
-    const data = await callYouTubeAPI('videoCategories', { part: 'snippet', regionCode: req.query.regionCode || 'US' });
+    console.log(`[getCategories] Cache miss for ${regionCode}, calling YouTube API...`);
+
+    const data = await callYouTubeAPI('videoCategories', { 
+      part: 'snippet', 
+      regionCode 
+    });
+
+    console.log(`[getCategories] YouTube API returned ${data.items?.length || 0} categories`);
+
     const categories = data.items.map(item => ({
       id: item.id,
       title: item.snippet.title,
     }));
+
     cache.set(cacheKey, categories);
+    console.log(`[getCategories] Cached ${categories.length} categories for ${regionCode}`);
+
     res.json(categories);
   } catch (error) {
+    console.error(`[getCategories] Failed to fetch categories:`, error.message);
     res.status(500).json({ error: error.message });
   }
 }
