@@ -40,10 +40,10 @@ app.use(async (req, res, next) => {
   next();
 });
 
-app.use('/api', apiRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/favorites', favoritesRoutes);
-app.use('/api/playlists', playlistRoutes);
+app.use('/', apiRoutes);
+app.use('/auth', authRoutes);
+app.use('/favorites', favoritesRoutes);
+app.use('/playlists', playlistRoutes);
 
 app.get('/api', (req, res) => {
   res.json({ message: 'YouTube Trend Analyzer API is running' });
