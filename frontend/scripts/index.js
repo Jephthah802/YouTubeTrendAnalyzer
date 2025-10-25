@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // }
     async function fetchCategories() {
         try {
-            const response = await fetch(`${API_BASE}/api/categories?regionCode=${currentRegion}`);
+            const response = await fetch(`${API_BASE}/categories?regionCode=${currentRegion}`);
             if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
             categories = await response.json();
             updateCategories();
@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
         videosContainer.innerHTML = '';
 
         try {
-            const url = `${API_BASE}/api/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
+            const url = `${API_BASE}/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch videos: ${response.status}`);
             const data = await response.json();
