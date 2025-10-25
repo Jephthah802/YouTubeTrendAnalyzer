@@ -12,8 +12,8 @@ const app = express();
 app.use(
   cors({
     origin: [
-      'https://you-tube-trend-analyzer-1dnqajw3s-jephewoh-gmailcoms-projects.vercel.app',
-      'https://you-tube-trend-analyzer-7f1oivqpz-jephewoh-gmailcoms-projects.vercel.app', 
+      'https://you-tube-trend-analyzer-7f1oivqpz-jephewoh-gmailcoms-projects.vercel.app',
+      'https://you-tube-trend-analyzer-ahpkm67bp-jephewoh-gmailcoms-projects.vercel.app',
       'https://youtubetrendanalyzer.onrender.com',
       'https://you-tube-trend-analyzer.vercel.app',
       'http://localhost:5000',
@@ -22,6 +22,7 @@ app.use(
     credentials: true,
   })
 );
+;
 
 app.use(express.json());
 
