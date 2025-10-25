@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const API_BASE = "https://youtube-trend-backend.onrender.com";
     const themeToggle = document.getElementById('theme-toggle');
     const categorySearch = document.getElementById('category-search');
     const categorySuggestions = document.getElementById('category-suggestions');
@@ -188,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // }
     async function fetchCategories() {
         try {
-            const response = await fetch(`/api/categories?regionCode=${currentRegion}`);
+            const response = await fetch(`${API_BASE}/api/categories?regionCode=${currentRegion}`);
             if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
             categories = await response.json();
             updateCategories();
@@ -328,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
         videosContainer.innerHTML = '';
 
         try {
-            const url = `/api/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
+            const url = `${API_BASE}/api/trending?regions=${currentRegion}&maxResults=${currentVideoCount}&categoryId=${currentCategory}&videoType=${currentVideoType}&maxVideos=${currentVideoCount}`;
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch videos: ${response.status}`);
             const data = await response.json();
