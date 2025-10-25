@@ -8,19 +8,20 @@ import playlistRoutes from './routes/playlist.routes.js';
 
 const app = express();
 
-// CORS
+//  CORS setup
 app.use(
   cors({
     origin: [
-      'https://you-tube-trend-analyzer-7f1oivqpz-jephewoh-gmailcoms-projects.vercel.app',
+      'https://you-tube-trend-analyzer-1dnqajw3s-jephewoh-gmailcoms-projects.vercel.app',
+      'https://you-tube-trend-analyzer-7f1oivqpz-jephewoh-gmailcoms-projects.vercel.app', 
       'https://youtubetrendanalyzer.onrender.com',
-      'http://localhost:5000', 
-      'http://127.0.0.1:5501' 
+      'https://you-tube-trend-analyzer.vercel.app',
+      'http://localhost:5000',
+      'http://127.0.0.1:5501',
     ],
     credentials: true,
   })
 );
-
 
 app.use(express.json());
 
@@ -39,4 +40,4 @@ app.get('/', (req, res) => {
 
 // Listen on Render’s port
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const API_BASE = 'https://youtubetrendanalyzer.onrender.com/api';
+    const API_BASE = 'https://youtubetrendanalyzer.onrender.com';
     const themeToggle = document.getElementById('theme-toggle');
     const categorySearch = document.getElementById('category-search');
     const categorySuggestions = document.getElementById('category-suggestions');
